@@ -1,0 +1,122 @@
+/* OpenAI Developer Blog Style Overrides */
+
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css");
+
+:root {
+  --vp-font-family-base: "Pretendard", "Inter", "Helvetica Neue", Arial, sans-serif;
+  
+  /* Force dark mode colors to match the target design mostly */
+  --vp-c-bg: #000000;
+  --vp-c-bg-alt: #0a0a0a;
+  
+  --vp-c-text-1: #ffffff;
+  --vp-c-text-2: #a3a3a3;
+  --vp-c-text-3: #737373;
+  
+  --vp-c-border: #333333;
+  --vp-c-divider: #222222;
+
+  /* Brand color */
+  --vp-c-brand-1: #ffffff;
+  --vp-c-brand-2: #eeeeee;
+  --vp-c-brand-3: #cccccc;
+  
+  /* Sidebar */
+  --vp-sidebar-bg-color: #000000;
+  
+  /* Nav bar */
+  --vp-nav-bg-color: rgba(0, 0, 0, 0.8);
+  --vp-nav-border-color: transparent;
+  
+  /* Page max widths - wider for the openai look */
+  --vp-layout-max-width: 1200px;
+}
+
+/* Fallback for light mode, but keeping it very dark anyway since the target is a specific brand aesthetic */
+html:not(.dark) {
+  --vp-c-bg: #ffffff;
+  --vp-c-bg-alt: #f3f4f6;
+  --vp-c-text-1: #111111;
+  --vp-c-text-2: #4b5563;
+  --vp-c-border: #e5e7eb;
+}
+
+/* Let CustomHome handle its own dark/light coloring overrides if needed, but the prompt says 
+"사진과 같이 심플하고 세련된 디자인으로 디자인하십시오."
+So I will enforce dark mode on CustomHome */
+
+.dark .custom-home-container {
+  color: white;
+}
+
+/* Navbar specific styling */
+.VPNavBar {
+  border-bottom: 1px solid var(--vp-c-divider) !important;
+}
+
+.VPNavBarMenuLink {
+  font-size: 14px !important;
+  font-weight: 500 !important;
+}
+
+.VPNavBarTitle .title {
+  font-weight: 600 !important;
+  letter-spacing: -0.02em;
+}
+
+/* Sidebar styling */
+.VPSidebar {
+  border-right: 1px solid var(--vp-c-divider) !important;
+  background-color: transparent !important;
+}
+.VPSidebarItem.level-0 > .item > .text {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  margin-top: 10px;
+}
+.VPSidebarItem .text {
+  font-size: 13px !important;
+}
+
+/* The custom home page */
+.custom-home-page .VPDoc {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  width: 100% !important;
+  max-width: 1000px !important; /* The open ai layout is wide */
+  margin: 0 auto;
+}
+.custom-home-page .vp-doc {
+  /* Hide the markdown doc wrapper padding */
+  padding: 0;
+}
+.custom-home-page .VPDoc h1:first-child { 
+  /* Hides default Vitepress h1 if any */
+  display: none;
+}
+.custom-home-page .VPDoc .custom-home-container h1 {
+  display: block; /* keep our custom title */
+}
+
+/* "Start searching" button */
+.DocSearch-Button {
+  border-radius: 8px !important;
+  justify-content: space-between !important;
+  width: 180px !important;
+  margin-left: 12px;
+}
+.DocSearch-Button-Keys {
+  display: none !important;
+}
+.DocSearch-Button-Placeholder {
+  font-size: 13px;
+}
+
+/* Make search bar look dark always if in dark mode */
+.dark .DocSearch-Button {
+  background-color: #1a1a1a !important;
+  border: 1px solid #333 !important;
+}
+.dark .DocSearch-Button-Placeholder {
+  color: #888 !important;
+}
