@@ -1,246 +1,309 @@
+const EXACT = 0;
+const LOWERBOUND = 1;
+const UPPERBOUND = 2;
+
+const SCORE_FIVE = 10000000;
+const SCORE_FOUR = 100000;
+const SCORE_OPEN_THREE = 10000;
+const SCORE_THREE = 1000;
+const SCORE_OPEN_TWO = 100;
+const SCORE_TWO = 10;
+
 class GomokuAI {
     constructor(engine, isBlack = false) {
         this.engine = engine;
-        this.aiPlayer = isBlack ? BLACK : WHITE;
-        this.humanPlayer = isBlack ? WHITE : BLACK;
-        this.maxDepth = 3;
+        this.aiPlayer = isBlack ? 1 : 2;
+        this.humanPlayer = isBlack ? 2 : 1;
+        this.transpositionTable = new Map();
+        this.timeLimit = 3000; // ms
+        this.startTime = 0;
+        this.timeOut = false;
+        this.nodesEvaluated = 0;
+        
+        this.MAX_TT_SIZE = 1000000;
     }
 
-    async getBestMove() {
-        // Yield to allow UI to show "Thinking..."
-        await new Promise(resolve => setTimeout(resolve, 50));
+    getBestMove(timeLimit = 3000) {
+        this.timeLimit = timeLimit;
+        this.startTime = Date.now();
+        this.timeOut = false;
+        this.nodesEvaluated = 0;
         
-        // If first move and board empty, play in the center
         if (this.engine.history.length === 0) {
             return { r: 7, c: 7 };
         }
-        
-        let bestScore = -Infinity;
+
         let bestMove = null;
-        let alpha = -Infinity;
-        let beta = Infinity;
-        
-        const candidateMoves = this.getCandidateMoves(this.engine.board, this.aiPlayer);
-        
-        // Optimize search space: Sort candidate moves based on a quick static evaluation
-        candidateMoves.sort((a, b) => b.score - a.score);
-        
-        for (let move of candidateMoves) {
-            // Apply move
-            this.engine.placeStone(move.r, move.c, false);
+        let depth = 1;
+
+        while (true) {
+            let move = this.searchDepth(depth);
             
-            // Eval recursively
-            let score = this.minimax(this.engine.board, this.maxDepth - 1, alpha, beta, false);
-            
-            // Undo move
-            this.engine.removeStone(move.r, move.c);
-            
-            if (score > bestScore) {
-                bestScore = score;
-                bestMove = { r: move.r, c: move.c };
+            if (this.timeOut) {
+                break; 
             }
-            alpha = Math.max(alpha, bestScore);
-            
-            if (alpha >= beta) break;
+            if (move) {
+                bestMove = move;
+                if (bestMove.score >= SCORE_FIVE / 2) {
+                    break; // Immediate win found
+                }
+            }
+            depth++;
+            if (depth > 20) break; 
         }
 
-        // Failsafe move
+        console.log(`[AI] Depth reached: ${depth-1}, Nodes: ${this.nodesEvaluated}, Best Score: ${bestMove ? bestMove.score : 0}`);
+
         if (!bestMove) {
-            bestMove = candidateMoves[0];
+           let moves = this.generateMoves(this.aiPlayer);
+           if (moves.length > 0) bestMove = moves[0];
         }
 
         return bestMove;
     }
 
-    minimax(board, depth, alpha, beta, isMaximizingPlayer) {
-        if (depth === 0) {
-            return this.evaluateBoard(board);
+    searchDepth(depth) {
+        let alpha = -Infinity;
+        let beta = Infinity;
+        let bestScore = -Infinity;
+        let bestMove = null;
+
+        const candidateMoves = this.generateMoves(this.aiPlayer);
+        if (candidateMoves.length === 0) return null;
+
+        for (let i = 0; i < candidateMoves.length; i++) {
+            let move = candidateMoves[i];
+            
+            this.engine.placeStone(move.r, move.c, true);
+            let score = this.minimax(depth - 1, alpha, beta, false);
+            this.engine.undo();
+
+            if (this.timeOut) return null;
+
+            if (score > bestScore) {
+                bestScore = score;
+                bestMove = move;
+                bestMove.score = score;
+            }
+
+            alpha = Math.max(alpha, bestScore);
+        }
+        
+        return bestMove;
+    }
+
+    minimax(depth, alpha, beta, isMaximizing) {
+        this.nodesEvaluated++;
+
+        if (this.nodesEvaluated % 100 === 0 && (Date.now() - this.startTime) > this.timeLimit) {
+            this.timeOut = true;
+            return 0;
         }
 
-        const currentPlayer = isMaximizingPlayer ? this.aiPlayer : this.humanPlayer;
-        
-        // Check terminal state (win/lose)
-        const lastMove = this.engine.history[this.engine.history.length - 1]; // Simplified
+        const ttEntry = this.transpositionTable.get(this.engine.zobristHash);
+        if (ttEntry && ttEntry.depth >= depth) {
+            if (ttEntry.flag === EXACT) return ttEntry.score;
+            if (ttEntry.flag === LOWERBOUND && ttEntry.score >= beta) return ttEntry.score;
+            if (ttEntry.flag === UPPERBOUND && ttEntry.score <= alpha) return ttEntry.score;
+        }
+
+        const currentPlayer = isMaximizing ? this.aiPlayer : this.humanPlayer;
+
+        const lastMove = this.engine.history[this.engine.history.length - 1];
         if (lastMove) {
             const winStatus = this.engine.checkWin(lastMove.r, lastMove.c, lastMove.player);
             if (winStatus.win) {
-                return isMaximizingPlayer ? -1000000 + depth : 1000000 - depth; // Win faster is better
+                // Shorter paths to win are better
+                return lastMove.player === this.aiPlayer ? SCORE_FIVE + depth : -SCORE_FIVE - depth;
             }
         }
 
-        const candidateMoves = this.getCandidateMoves(board, currentPlayer);
-        
-        if (candidateMoves.length === 0) return 0; // Draw
-        
-        if (isMaximizingPlayer) {
-            let maxEval = -Infinity;
-            for (let move of candidateMoves) {
-                this.engine.board[move.r][move.c] = currentPlayer; // temp place
-                this.engine.history.push({r: move.r, c: move.c, player: currentPlayer});
-                
-                let evalScore = this.minimax(board, depth - 1, alpha, beta, false);
-                
-                this.engine.history.pop();
-                this.engine.board[move.r][move.c] = EMPTY; // undo
-                
-                maxEval = Math.max(maxEval, evalScore);
-                alpha = Math.max(alpha, evalScore);
-                if (beta <= alpha) break; // Prune
-            }
-            return maxEval;
-        } else {
-            let minEval = Infinity;
-            for (let move of candidateMoves) {
-                this.engine.board[move.r][move.c] = currentPlayer; // temp place
-                this.engine.history.push({r: move.r, c: move.c, player: currentPlayer});
-                
-                let evalScore = this.minimax(board, depth - 1, alpha, beta, true);
-                
-                this.engine.history.pop();
-                this.engine.board[move.r][move.c] = EMPTY; // undo
-                
-                minEval = Math.min(minEval, evalScore);
-                beta = Math.min(beta, evalScore);
-                if (beta <= alpha) break; // Prune
-            }
-            return minEval;
+        if (depth === 0) {
+            let evalScore = this.evaluateBoard();
+            this.storeTT(depth, evalScore, EXACT);
+            return evalScore;
         }
+
+        const candidateMoves = this.generateMoves(currentPlayer);
+        if (candidateMoves.length === 0) return 0; // Draw
+
+        let origAlpha = alpha;
+        let bestScore = isMaximizing ? -Infinity : Infinity;
+
+        for (let i = 0; i < candidateMoves.length; i++) {
+            let move = candidateMoves[i];
+            
+            this.engine.placeStone(move.r, move.c, true);
+            let score = this.minimax(depth - 1, alpha, beta, !isMaximizing);
+            this.engine.undo();
+
+            if (this.timeOut) return 0;
+
+            if (isMaximizing) {
+                bestScore = Math.max(bestScore, score);
+                alpha = Math.max(alpha, bestScore);
+            } else {
+                bestScore = Math.min(bestScore, score);
+                beta = Math.min(beta, bestScore);
+            }
+
+            if (beta <= alpha) {
+                break; // Alpha-beta pruning
+            }
+        }
+
+        let ttFlag = EXACT;
+        if (bestScore <= origAlpha) ttFlag = UPPERBOUND;
+        else if (bestScore >= beta) ttFlag = LOWERBOUND;
+
+        this.storeTT(depth, bestScore, ttFlag);
+
+        return bestScore;
     }
 
-    // Get cells adjacent to existing stones (distance up to 2)
-    getCandidateMoves(board, player) {
-        const moves = new Set();
+    storeTT(depth, score, flag) {
+        if (this.transpositionTable.size > this.MAX_TT_SIZE) {
+            this.transpositionTable.clear();
+        }
+        this.transpositionTable.set(this.engine.zobristHash, { depth, score, flag });
+    }
+
+    generateMoves(player) {
+        const moves = [];
+        const checked = new Uint8Array(225);
+
         const directions = [
             [-1, -1], [-1, 0], [-1, 1],
             [0, -1],           [0, 1],
             [1, -1],  [1, 0],  [1, 1]
         ];
-        
-        for (let r = 0; r < BOARD_SIZE; r++) {
-            for (let c = 0; c < BOARD_SIZE; c++) {
-                if (board[r][c] !== EMPTY) {
-                    // Check neighbors
+
+        for (let r = 0; r < 15; r++) {
+            for (let c = 0; c < 15; c++) {
+                if (this.engine.board[r][c] !== 0) {
                     for (let d of directions) {
-                        for(let step=1; step<=2; step++) {
-                            let nr = r + d[0]*step;
-                            let nc = c + d[1]*step;
-                            if (nr >= 0 && nr < BOARD_SIZE && nc >= 0 && nc < BOARD_SIZE && board[nr][nc] === EMPTY) {
-                                // For Black, skip forbidden spots
-                                if(player === BLACK && this.engine.isForbidden(nr, nc)) continue;
-                                moves.add(`${nr},${nc}`);
+                        for (let step = 1; step <= 2; step++) {
+                            let nr = r + d[0] * step;
+                            let nc = c + d[1] * step;
+                            
+                            if (nr >= 0 && nr < 15 && nc >= 0 && nc < 15) {
+                                let idx = nr * 15 + nc;
+                                if (this.engine.board[nr][nc] === 0 && !checked[idx]) {
+                                    checked[idx] = 1;
+                                    if (player === 1 && this.engine.isForbidden(nr, nc)) continue;
+                                    
+                                    let score = this.scoreMoveDirectly(nr, nc, player);
+                                    moves.push({ r: nr, c: nc, score });
+                                }
                             }
                         }
                     }
                 }
             }
         }
-        
-        let candidates = Array.from(moves).map(str => {
-            let parts = str.split(',');
-            return { r: parseInt(parts[0]), c: parseInt(parts[1]) };
-        });
 
-        // Quick evaluate to sort
-        candidates.forEach(move => {
-            move.score = this.quickEvaluate(move.r, move.c, player);
-        });
-
-        // Limit candidates to reduce branching factor (top 20 moves)
-        return candidates.sort((a,b) => b.score - a.score).slice(0, 20);
+        return moves.sort((a, b) => b.score - a.score).slice(0, 20); // Top branch limit for Gomoku scaling
     }
 
-    quickEvaluate(r, c, player) {
-        // Simulate playing the stone
-        this.engine.board[r][c] = player;
-        let score = this.evaluateSpot(r, c, player);
+    scoreMoveDirectly(r, c, player) {
+        const opponent = player === 1 ? 2 : 1;
         
-        // Calculate opponent threat if we DON'T play here (block score)
-        let opponent = player === BLACK ? WHITE : BLACK;
-        this.engine.board[r][c] = opponent;
-        let blockScore = this.evaluateSpot(r, c, opponent);
+        let atkScore = this.evaluateSpot(r, c, player);
+        let defScore = this.evaluateSpot(r, c, opponent);
         
-        this.engine.board[r][c] = EMPTY; // revert
-        
-        return score + blockScore * 0.9; // Prioritize own attack slightly more than blocking in static eval, but blocking high threats is critical.
-    }
+        if (defScore >= SCORE_FIVE) return SCORE_FIVE + 50; 
+        if (atkScore >= SCORE_FIVE) return SCORE_FIVE + 100;
 
-    // Evaluate the board statically from AI's perspective
-    evaluateBoard(board) {
-        let aiScore = 0;
-        let humanScore = 0;
-        
-        // Evaluate only spots around recently placed stones for performance
-        // Actually, a full board scan is more accurate.
-        // We will scan lines instead for efficiency.
-        const dirs = [
-            [0, 1], // Horiz
-            [1, 0], // Vert
-            [1, 1], // Diag \
-            [1, -1] // Diag /
-        ];
-
-        // This is a simplified evaluator that scores lines.
-        for(let r=0; r<BOARD_SIZE; r++) {
-            for(let c=0; c<BOARD_SIZE; c++) {
-                if(board[r][c] !== EMPTY) {
-                    let player = board[r][c];
-                    let score = this.evaluateSpot(r, c, player) * (player === this.aiPlayer ? 1 : -1.2); 
-                    // Bias towards blocking (human gets higher weight)
-                    if(player === this.aiPlayer) aiScore += score;
-                    else humanScore += score;
-                }
-            }
-        }
-        return aiScore + humanScore;
+        return atkScore + defScore * 0.9;
     }
 
     evaluateSpot(r, c, player) {
         const dirs = [[0, 1], [1, 0], [1, 1], [1, -1]];
-        let totalScore = 0;
-
-        for (let dir of dirs) {
-            totalScore += this.evaluateDirection(r, c, dir[0], dir[1], player);
+        let total = 0;
+        for (let d of dirs) {
+            total += this.evaluatePatternCentered(r, c, d[0], d[1], player);
         }
-        return totalScore;
+        return total;
     }
 
-    evaluateDirection(r, c, dr, dc, player) {
-        let count = 1;
-        let openEnds = 0;
-        
-        // Forward
+    evaluatePatternCentered(r, c, dr, dc, player) {
+        let consec = 1;
+        let block = 0;
+
         let nr = r + dr, nc = c + dc;
-        while (nr >= 0 && nr < BOARD_SIZE && nc >= 0 && nc < BOARD_SIZE && this.engine.board[nr][nc] === player) {
+        while (nr >= 0 && nr < 15 && nc >= 0 && nc < 15) {
+            if (this.engine.board[nr][nc] === player) { consec++; nr += dr; nc += dc; }
+            else if (this.engine.board[nr][nc] === 0) { break; }
+            else { block++; break; }
+        }
+        if (!(nr >= 0 && nr < 15 && nc >= 0 && nc < 15)) block++;
+
+        nr = r - dr; nc = c - dc;
+        while (nr >= 0 && nr < 15 && nc >= 0 && nc < 15) {
+            if (this.engine.board[nr][nc] === player) { consec++; nr -= dr; nc -= dc; }
+            else if (this.engine.board[nr][nc] === 0) { break; }
+            else { block++; break; }
+        }
+        if (!(nr >= 0 && nr < 15 && nc >= 0 && nc < 15)) block++;
+
+        if (consec >= 5) return SCORE_FIVE;
+        if (consec === 4) return block === 0 ? SCORE_FOUR : SCORE_FOUR / 2;
+        if (consec === 3) return block === 0 ? SCORE_OPEN_THREE : SCORE_THREE;
+        if (consec === 2) return block === 0 ? SCORE_OPEN_TWO : SCORE_TWO;
+        return 1;
+    }
+
+    evaluateBoard() {
+        let scoreAI = 0;
+        let scoreHuman = 0;
+        
+        const board = this.engine.board;
+        
+        for (let r = 0; r < 15; r++) {
+            for (let c = 0; c < 15; c++) {
+                let p = board[r][c];
+                if (p === 0) continue;
+                
+                if (c === 0 || board[r][c - 1] !== p) {
+                    let s = this.evalDir(r, c, 0, 1, p);
+                    if (p === this.aiPlayer) scoreAI += s; else scoreHuman += s;
+                }
+                if (r === 0 || board[r - 1][c] !== p) {
+                    let s = this.evalDir(r, c, 1, 0, p);
+                    if (p === this.aiPlayer) scoreAI += s; else scoreHuman += s;
+                }
+                if (r === 0 || c === 0 || board[r - 1][c - 1] !== p) {
+                    let s = this.evalDir(r, c, 1, 1, p);
+                    if (p === this.aiPlayer) scoreAI += s; else scoreHuman += s;
+                }
+                if (r === 0 || c === 14 || board[r - 1][c + 1] !== p) {
+                    let s = this.evalDir(r, c, 1, -1, p);
+                    if (p === this.aiPlayer) scoreAI += s; else scoreHuman += s;
+                }
+            }
+        }
+        
+        // Defensive play bias slightly
+        return scoreAI - (scoreHuman * 1.5);
+    }
+
+    evalDir(r, c, dr, dc, p) {
+        let count = 0;
+        let nr = r, nc = c;
+        while (nr >= 0 && nr < 15 && nc >= 0 && nc < 15 && this.engine.board[nr][nc] === p) {
             count++;
             nr += dr; nc += dc;
         }
-        if (nr >= 0 && nr < BOARD_SIZE && nc >= 0 && nc < BOARD_SIZE && this.engine.board[nr][nc] === EMPTY) {
-            openEnds++;
-        }
-
-        // Backward
-        nr = r - dr; nc = c - dc;
-        while (nr >= 0 && nr < BOARD_SIZE && nc >= 0 && nc < BOARD_SIZE && this.engine.board[nr][nc] === player) {
-            count++;
-            nr -= dr; nc -= dc;
-        }
-        if (nr >= 0 && nr < BOARD_SIZE && nc >= 0 && nc < BOARD_SIZE && this.engine.board[nr][nc] === EMPTY) {
-            openEnds++;
-        }
-
-        // Score based on heuristic provided:
-        if (count >= 5) return 100000;
-        if (count === 4) {
-            if (openEnds === 2) return 20000; // Open 4 (certain win)
-            if (openEnds === 1) return 10000; // Blocked 4
-        }
-        if (count === 3) {
-            if (openEnds === 2) return 1000;  // Open 3
-            if (openEnds === 1) return 100;   // Blocked 3
-        }
-        if (count === 2) {
-            if (openEnds === 2) return 10;
-        }
-        return 1;
+        
+        let block = 0;
+        let sr = r - dr, sc = c - dc;
+        if (sr < 0 || sr >= 15 || sc < 0 || sc >= 15 || this.engine.board[sr][sc] !== 0) block++;
+        if (nr < 0 || nr >= 15 || nc < 0 || nc >= 15 || this.engine.board[nr][nc] !== 0) block++;
+        
+        if (count >= 5) return SCORE_FIVE;
+        if (count === 4) return block === 0 ? SCORE_FOUR : SCORE_FOUR / 2;
+        if (count === 3) return block === 0 ? SCORE_OPEN_THREE : SCORE_THREE;
+        if (count === 2) return block === 0 ? SCORE_OPEN_TWO : SCORE_TWO;
+        return 0;
     }
 }

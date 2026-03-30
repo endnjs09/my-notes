@@ -3,6 +3,17 @@ const EMPTY = 0;
 const BLACK = 1;
 const WHITE = 2;
 
+// Generate Zobrist Hash Table (2 players x 15 x 15) using 64-bit integers (BigInt)
+const ZOBRIST = Array.from({ length: 2 }, () => 
+    Array.from({ length: BOARD_SIZE }, () => 
+        Array.from({ length: BOARD_SIZE }, () => {
+            const high = Math.floor(Math.random() * 0xFFFFFFFF);
+            const low = Math.floor(Math.random() * 0xFFFFFFFF);
+            return (BigInt(high) << 32n) | BigInt(low);
+        })
+    )
+);
+
 class GomokuEngine {
     constructor() {
         this.board = Array.from({ length: BOARD_SIZE }, () => Array(BOARD_SIZE).fill(EMPTY));
@@ -11,6 +22,7 @@ class GomokuEngine {
         this.gameOver = false;
         this.winner = EMPTY;
         this.winningCells = [];
+        this.zobristHash = 0n;
     }
 
     reset() {
@@ -20,21 +32,28 @@ class GomokuEngine {
         this.gameOver = false;
         this.winner = EMPTY;
         this.winningCells = [];
+        this.zobristHash = 0n;
     }
 
     undo() {
-        if (this.history.length === 0 || this.gameOver) return false;
+        if (this.history.length === 0) return false;
         const lastMove = this.history.pop();
         this.board[lastMove.r][lastMove.c] = EMPTY;
         this.currentTurn = lastMove.player;
+        this.zobristHash ^= ZOBRIST[this.currentTurn - 1][lastMove.r][lastMove.c]; // Revert hash
+        this.gameOver = false;
+        this.winner = EMPTY;
+        this.winningCells = [];
         return true;
     }
 
     placeStone(r, c, updateState = true) {
         if (this.board[r][c] !== EMPTY || this.gameOver) return false;
 
+        this.board[r][c] = this.currentTurn;
+        this.zobristHash ^= ZOBRIST[this.currentTurn - 1][r][c]; // Update hash
+
         if (updateState) {
-            this.board[r][c] = this.currentTurn;
             this.history.push({ r, c, player: this.currentTurn });
             
             const winRes = this.checkWin(r, c, this.currentTurn);
@@ -45,14 +64,16 @@ class GomokuEngine {
             } else {
                 this.currentTurn = this.currentTurn === BLACK ? WHITE : BLACK;
             }
-        } else {
-            this.board[r][c] = this.currentTurn;
         }
         return true;
     }
 
     removeStone(r, c) {
-        this.board[r][c] = EMPTY;
+        const player = this.board[r][c];
+        if (player !== EMPTY) {
+            this.board[r][c] = EMPTY;
+            this.zobristHash ^= ZOBRIST[player - 1][r][c]; // Revert hash
+        }
     }
 
     checkWin(r, c, player) {
@@ -78,8 +99,8 @@ class GomokuEngine {
                 }
             }
 
-            // Exatcly 5 for win (actually >= 5 for White, but Black overline is handled by Renju rule)
-            if (count === 5 || (player === WHITE && count >= 5)) {
+            // >= 5 for win. If Renju is active, Black won't be able to play an overline anyway.
+            if (count >= 5) {
                 return { win: true, cells: cells };
             }
         }

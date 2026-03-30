@@ -1,15 +1,18 @@
 const engine = new GomokuEngine();
 let renderer;
-let ai;
+let ai = null;
+let aiPlayerId = -1;
 let aiFirstToggle;
 let renjuToggle;
+let difficultySelect;
 let isAiThinking = false;
-let gameMode = 'PvE'; // Player vs Environment
+let gameMode = 'PvE'; 
 
 document.addEventListener('DOMContentLoaded', () => {
     renderer = new GomokuRenderer('game-canvas', engine);
     aiFirstToggle = document.getElementById('ai-first-toggle');
     renjuToggle = document.getElementById('renju-toggle');
+    difficultySelect = document.getElementById('difficulty-select');
     
     initGame();
 
@@ -22,52 +25,58 @@ document.addEventListener('DOMContentLoaded', () => {
     
     document.getElementById('btn-undo').addEventListener('click', () => {
         if(engine.history.length === 0 || isAiThinking) return;
-        // Undo twice to revert AI's move and player's move
+        
+        // Undo in main thread
         engine.undo();
         if(gameMode === 'PvE' && engine.currentTurn !== (aiFirstToggle.checked ? WHITE : BLACK)) {
             engine.undo();
         }
+        
         renderer.draw();
         updateUI();
     });
 
     aiFirstToggle.addEventListener('change', initGame);
+    difficultySelect.addEventListener('change', initGame);
     
     renderer.canvas.addEventListener('click', handlePlayerClick);
 });
 
-async function initGame() {
+function initGame() {
     engine.reset();
     isAiThinking = false;
     document.getElementById('game-over-modal').classList.add('hidden');
     
     const isAiBlack = aiFirstToggle.checked;
-    ai = new GomokuAI(engine, isAiBlack);
+    aiPlayerId = isAiBlack ? BLACK : WHITE;
+    
+    if (difficultySelect.value === 'easy') {
+        ai = new GomokuAIEasy(engine, isAiBlack);
+    } else {
+        ai = new GomokuAI(engine, isAiBlack);
+    }
     
     updateUI();
     renderer.draw();
     
     if (isAiBlack && engine.currentTurn === BLACK) {
-        await playAITrun();
+        startAITurn();
     }
 }
 
-async function handlePlayerClick(e) {
+function handlePlayerClick(e) {
     if (engine.gameOver || isAiThinking) return;
     
     const {r, c} = renderer.getClickCoords(e);
     
     if (r < 0 || r >= BOARD_SIZE || c < 0 || c >= BOARD_SIZE) return;
     
-    // Check Renju for Black
     if (engine.currentTurn === BLACK && renjuToggle.checked) {
         if (engine.isForbidden(r, c)) {
-            // Flash red on hover or play error sound
             return;
         }
     }
     
-    // Attempt place
     if (engine.placeStone(r, c)) {
         renderer.draw();
         updateUI();
@@ -78,21 +87,31 @@ async function handlePlayerClick(e) {
         }
         
         if (gameMode === 'PvE') {
-            await playAITrun();
+            startAITurn();
         }
     }
 }
 
-async function playAITrun() {
+function startAITurn() {
     isAiThinking = true;
     document.getElementById('ai-thinking').classList.remove('hidden');
     renderer.canvas.style.cursor = 'wait';
+    updateUI();
     
-    // Allow UI to paint before blocking JS thread
-    await new Promise(r => setTimeout(r, 50));
-    
-    const move = await ai.getBestMove();
-    
+    // We use setTimeout to let the DOM update "Thinking..." before blocking thread
+    setTimeout(async () => {
+        let bestMove;
+        if (difficultySelect.value === 'easy') {
+            bestMove = await ai.getBestMove();
+        } else {
+            bestMove = ai.getBestMove(5000); 
+        }
+        handleAIMove(bestMove);
+    }, 50);
+}
+
+function handleAIMove(move) {
+    if (engine.gameOver) return;
     engine.placeStone(move.r, move.c);
     
     isAiThinking = false;
@@ -136,16 +155,16 @@ function showWinner() {
     modal.classList.remove('hidden');
     
     let winnerName = engine.winner === BLACK ? 'Black' : 'White';
-    let isAiWinner = (engine.winner === ai.aiPlayer);
+    let isAiWinner = (engine.winner === aiPlayerId);
     
     winnerText.innerText = `${winnerName} Wins!`;
     
     if (gameMode === 'PvE') {
         if (isAiWinner) {
-            winnerText.style.color = '#ef4444'; // Red for lost
+            winnerText.style.color = '#ef4444'; 
             winnerDesc.innerText = 'The AI outsmarted you this time!';
         } else {
-            winnerText.style.color = '#34d399'; // Green for win
+            winnerText.style.color = '#34d399'; 
             winnerDesc.innerText = 'Congratulations! You beat the Machine!';
         }
     } else {
