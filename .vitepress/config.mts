@@ -35,12 +35,37 @@ export default defineConfig({
               ]
             },
             {
-              text: 'Chapter-02. 데이터 조작',
+              text: 'Chapter-02. 기초 지식',
               collapsed: true,
               items: [
-                { text: '2-1. 텐서 기초 (준비중)', link: '/Chapter-02/tensor-basic' },
+                { text: '2-1. 텐서 기초', link: '/Chapter-02/2-1. Data Manipulation' },
+                { text: '2-2. 선형대수', link: '/Chapter-02/2-2. Linear Algebra' },
+                { text: '2-3. 미분', link: '/Chapter-02/2-3. Caculus' },
+                { text: '2-4. 자동 미분', link: '/Chapter-02/2-4. Automatic Differentiation' },
+                { text: '2-5. 확률과 통계', link: '/Chapter-02/2-5.  Probability and Statistics' },
+              ]
+            },
+            {
+              text: 'Chapter-03. LNN(Regression)',
+              collapsed: true,
+              items: [
+                { text: '3-1. 선형 회귀', link: '/Chapter-03/3-1. Linear Regression' },
+                { text: '3-2. 손실함수', link: '/Chapter-03/3-2. Loss function' },
+                { text: '3-3. 경사하강법', link: '/Chapter-03/3-3. Gradient Descent' },
+                { text: '3-4. 신경망', link: '/Chapter-03/3-4. NN' },
+                { text: '3-5. 모델링, 학습', link: '/Chapter-03/3-5. Modeling' },
+                { text: '3-6. 일반화', link: '/Chapter-03/3-6. Generalization' },
+                { text: '3-7. 가중치 감쇠', link: '/Chapter-03/3-7. Weight Decay' },
+              ]
+            },
+            {
+              text: 'Chapter-04. LNN(Classification)',
+              collapsed: true,
+              items: [
+                { text: '4-1. Softmax 회귀', link: '/Chapter-04/4-1. SoftMax Regression' },
               ]
             }
+            
           ]
         },
         {
