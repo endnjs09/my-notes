@@ -27,7 +27,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20 # 안정적인 Node.js 버전 사용
+          node-version: 22 # 안정적인 Node.js 버전 사용
           cache: npm
       - name: Setup Pages
         uses: actions/configure-pages@v4
