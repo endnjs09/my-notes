@@ -28,22 +28,31 @@
   --vp-nav-bg-color: rgba(0, 0, 0, 0.8);
   --vp-nav-border-color: transparent;
   
-  /* Page max widths - wider for the openai look */
+  /* Page max widths */
   --vp-layout-max-width: 1200px;
 }
 
-/* Fallback for light mode, but keeping it very dark anyway since the target is a specific brand aesthetic */
+/* [수정 포인트] 라이트 모드(반전 시) 글자색 및 배경색 변수 완전 오버라이드 */
 html:not(.dark) {
   --vp-c-bg: #ffffff;
   --vp-c-bg-alt: #f3f4f6;
-  --vp-c-text-1: #111111;
+  --vp-c-text-1: #111111; /* 글자색을 어둡게 변경 */
   --vp-c-text-2: #4b5563;
+  --vp-c-text-3: #6b7280;
   --vp-c-border: #e5e7eb;
+  --vp-c-divider: #e2e2e3;
+  --vp-sidebar-bg-color: #ffffff;
+  --vp-nav-bg-color: rgba(255, 255, 255, 0.8);
+  --vp-c-brand-1: #000000;
 }
-
 
 .dark .custom-home-container {
   color: white;
+}
+
+/* 라이트 모드 홈 컨테이너 글자색 대응 */
+html:not(.dark) .custom-home-container {
+  color: #111111;
 }
 
 .VPNavBar .divider,
@@ -59,7 +68,6 @@ html:not(.dark) {
 .VPNavBar {
   border-bottom: 1px solid var(--vp-c-divider) !important;
   background-color: var(--vp-c-bg) !important;
-  /* 가끔 컨테이너 너비 때문에 선이 잘려 보일 수 있으므로 너비 강제 */
   width: 100% !important;
 }
 
@@ -82,7 +90,7 @@ html:not(.dark) {
 /* Sidebar styling */
 .VPSidebar {
   border-right: 1px solid var(--vp-c-divider) !important;
-  background-color: transparent !important;
+  background-color: var(--vp-sidebar-bg-color) !important;
 }
 .VPSidebarItem.level-0 > .item > .text {
   font-size: 14px !important;
@@ -91,6 +99,7 @@ html:not(.dark) {
 }
 .VPSidebarItem .text {
   font-size: 13px !important;
+  color: var(--vp-c-text-1); /* 변수를 따르도록 설정 */
 }
 
 /* The custom home page */
@@ -98,19 +107,17 @@ html:not(.dark) {
   padding-top: 0 !important;
   padding-bottom: 0 !important;
   width: 100% !important;
-  max-width: 1000px !important; /* The open ai layout is wide */
+  max-width: 1000px !important; 
   margin: 0 auto;
 }
 .custom-home-page .vp-doc {
-  /* Hide the markdown doc wrapper padding */
   padding: 0;
 }
 .custom-home-page .VPDoc h1:first-child { 
-  /* Hides default Vitepress h1 if any */
   display: none;
 }
 .custom-home-page .VPDoc .custom-home-container h1 {
-  display: block; /* keep our custom title */
+  display: block; 
 }
 
 /* "Start searching" button */
@@ -134,4 +141,55 @@ html:not(.dark) {
 }
 .dark .DocSearch-Button-Placeholder {
   color: #888 !important;
+}
+
+
+/* --- Adaptive Code Block Styling (Dark/Light) --- */
+
+div[class*="language-"] {
+  background-color: #f8f9fa !important; 
+  border: 1px solid #e5e7eb !important; 
+  border-radius: 10px !important;
+  margin: 24px 0 !important;
+  transition: all 0.2s ease;
+}
+
+.dark div[class*="language-"] {
+  background-color: #0d0d0d !important; 
+  border: 1px solid #262626 !important; 
+}
+
+div[class*="language-"]:hover {
+  border-color: #41384483 !important; 
+}
+
+.vp-doc pre {
+  padding: 20px !important;
+  background-color: transparent !important;
+}
+
+div[class*="language-"] > span.lang {
+  color: #9ca3af !important; 
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase;
+  top: 10px !important;
+  right: 15px !important;
+}
+
+:not(pre) > code {
+  padding: 3px 6px !important;
+  border-radius: 4px !important;
+  font-size: 0.85em !important;
+  transition: all 0.2s ease;
+}
+
+/* 인라인 코드 라이트/다크 대응 */
+html:not(.dark) :not(pre) > code {
+  background-color: #f3f4f6 !important;
+  color: #eb5757 !important;
+}
+.dark :not(pre) > code {
+  background-color: #1a1a1a !important;
+  color: #ff6b6b !important;
 }
