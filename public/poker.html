@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Texas Hold'em - Standalone Engine</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: radial-gradient(circle, #1a1a1a 0%, #000000 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: white;
+            user-select: none;
+            overflow: hidden;
+        }
+
+        #table-cont {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #table {
+            width: 95%;
+            max-width: 1000px;
+            height: 85%;
+            background: radial-gradient(circle at center, #0f7a37 0%, #084c20 100%);
+            border: 15px solid #b8860b;
+            border-radius: 200px;
+            box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.8), 0 20px 50px rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            padding: 40px;
+            box-sizing: border-box;
+            border-style: groove;
+            position: relative;
+        }
+
+        @media (max-width: 768px) {
+            #table {
+                border-radius: 50px;
+                border-width: 10px;
+                height: 95%;
+                padding: 20px;
+            }
+        }
+
+        .player-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            z-index: 2;
+        }
+
+        .cards-container {
+            display: flex;
+            gap: 10px;
+            min-height: 120px;
+            align-items: center;
+        }
+
+        .card {
+            width: 75px;
+            height: 110px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 38px;
+            box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.6);
+            position: relative;
+            border: 1px solid #fff;
+            background: linear-gradient(135deg, #fff 0%, #f0f0f0 100%);
+            animation: deal 0.4s ease-out;
+        }
+
+        .card i {
+            font-style: normal;
+        }
+
+        @keyframes deal {
+            from {
+                transform: translateY(-30px) scale(0.8);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+        }
+
+        .card.red {
+            color: #d32f2f;
+        }
+
+        .card.black {
+            color: #111;
+        }
+
+        .card.hidden {
+            background: repeating-linear-gradient(45deg, #661111, #661111 8px, #881111 8px, #881111 16px);
+            border: 2px solid #ddd;
+            border-radius: 8px;
+        }
+
+        .card.hidden * {
+            display: none;
+        }
+
+        .card .top-left {
+            position: absolute;
+            top: 4px;
+            left: 6px;
+            font-size: 16px;
+            line-height: 1;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .card .bottom-right {
+            position: absolute;
+            bottom: 4px;
+            right: 6px;
+            font-size: 16px;
+            line-height: 1;
+            transform: rotate(180deg);
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .chip-box {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 8px 25px;
+            border-radius: 30px;
+            border: 2px solid #b8860b;
+            color: #ffd700;
+            font-size: 18px;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.6);
+            letter-spacing: 1px;
+        }
+
+        #community {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            z-index: 1;
+        }
+
+        #pot-info {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px 30px;
+            border-radius: 12px;
+            border: 2px solid #b8860b;
+            color: #ffd700;
+            font-size: 22px;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.7);
+            min-width: 150px;
+            text-align: center;
+        }
+
+        #status-msg {
+            font-size: 20px;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 1px 1px 3px #000;
+            min-height: 30px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 6px 20px;
+            border-radius: 20px;
+        }
+
+        #controls {
+            display: flex;
+            gap: 10px;
+            min-height: 45px;
+            margin-top: 5px;
+        }
+
+        .action-btn {
+            background: linear-gradient(145deg, #ffd700, #b8860b);
+            color: #000;
+            border: 2px solid #5a4200;
+            padding: 12px 25px;
+            font-size: 15px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
+            transition: transform 0.1s, filter 0.2s;
+            text-transform: uppercase;
+        }
+
+        .action-btn:active {
+            transform: scale(0.95);
+        }
+
+        .action-btn:hover {
+            filter: brightness(1.2);
+        }
+
+        .rank-name {
+            font-size: 18px;
+            color: #aeea00;
+            font-weight: bold;
+            min-height: 24px;
+            text-shadow: 1px 1px 2px #000;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 2px 15px;
+            border-radius: 10px;
+        }
+
+        #modal {
+            display: flex;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.85);
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            flex-direction: column;
+        }
+
+        #modal-content {
+            background: radial-gradient(circle, #2a2a2a 0%, #111 100%);
+            padding: 40px 60px;
+            border-radius: 15px;
+            border: 3px solid #b8860b;
+            text-align: center;
+            box-shadow: 0 0 50px rgba(255, 215, 0, 0.4);
+        }
+
+        #modal h2 {
+            margin-top: 0;
+            color: #ffd700;
+            font-size: 36px;
+            text-shadow: 2px 2px 4px #000;
+            margin-bottom: 30px;
+        }
+
+        .winner-glow {
+            box-shadow: 0 0 25px 8px #ffd700 !important;
+            border-color: #ffd700 !important;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="table-cont">
+        <div id="table">
+            <div class="player-area">
+                <div class="chip-box" id="ai-chips">AI: $1000</div>
+                <div class="cards-container" id="ai-cards"></div>
+                <div class="rank-name" id="ai-rank"></div>
+            </div>
+
+            <div id="community">
+                <div id="pot-info">Pot: $<span id="pot">0</span></div>
+                <div class="cards-container" id="community-cards"></div>
+                <div id="status-msg">Welcome to Texas Hold'em</div>
+            </div>
+
+            <div class="player-area">
+                <div class="rank-name" id="player-rank"></div>
+                <div class="cards-container" id="player-cards"></div>
+                <div id="controls"></div>
+                <div class="chip-box" id="player-chips">Player: $1000</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal">
+        <div id="modal-content">
+            <h2 id="modal-title">Texas Hold'em</h2>
+            <button class="action-btn" onclick="initGame()" style="font-size: 20px; padding: 15px 40px;">Play
+                Hand</button>
+        </div>
+    </div>
+
+    <script>
+        const SUITS = ['♠', '♥', '◆', '♣'];
+        let state = {
+            deck: [], community: [], player: { cards: [], chips: 1000, currentBet: 0 },
+            ai: { cards: [], chips: 1000, currentBet: 0 },
+            pot: 0, roundBet: 0, phase: 'INIT', turn: 'PLAYER', log: "", someoneFolded: false, gameOver: false
+        };
+
+        function setLog(msg) {
+            state.log = msg;
+            document.getElementById('status-msg').innerText = msg;
+        }
+
+        function getDeck() {
+            let deck = [];
+            for (let suit of SUITS) {
+                for (let rank = 2; rank <= 14; rank++) deck.push({ suit, rank });
+            }
+            for (let i = deck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [deck[i], deck[j]] = [deck[j], deck[i]];
+            }
+            return deck;
+        }
+
+        function getRankString(rank) {
+            if (rank === 14) return 'A';
+            if (rank === 13) return 'K';
+            if (rank === 12) return 'Q';
+            if (rank === 11) return 'J';
+            return rank.toString();
+        }
+
+        function renderCard(card, hidden = false) {
+            if (hidden) return `<div class="card hidden"></div>`;
+            let colorClass = (card.suit === '♥' || card.suit === '◆') ? 'red' : 'black';
+            let str = getRankString(card.rank);
+            return `<div class="card ${colorClass}">
+            <div class="top-left">${str}<br>${card.suit}</div>
+            <i>${card.suit}</i>
+            <div class="bottom-right">${str}<br>${card.suit}</div>
+        </div>`;
+        }
+
+        function evaluateHand(cards) {
+            if (!cards || cards.length < 1) return { value: -1, name: "", kickers: [] };
+            let ranks = cards.map(c => c.rank).sort((a, b) => b - a);
+            let counts = {};
+            for (let r of ranks) counts[r] = (counts[r] || 0) + 1;
+            let countsArr = Object.entries(counts).map(([r, c]) => ({ rank: parseInt(r), count: c }))
+                .sort((a, b) => b.count - a.count || b.rank - a.rank);
+
+            let suitCounts = {};
+            for (let c of cards) suitCounts[c.suit] = (suitCounts[c.suit] || 0) + 1;
+            let flushSuit = Object.keys(suitCounts).find(s => suitCounts[s] >= 5);
+            let isFlush = !!flushSuit;
+            let flushRanks = isFlush ? cards.filter(c => c.suit === flushSuit).map(c => c.rank).sort((a, b) => b - a) : [];
+
+            function findStraight(rankList) {
+                let un = [...new Set(rankList)].sort((a, b) => b - a);
+                if (un.includes(14)) un.push(1);
+                for (let i = 0; i <= un.length - 5; i++) {
+                    if (un[i] - un[i + 4] === 4) return un.slice(i, i + 5);
+                }
+                return null;
+            }
+
+            let straightRanks = findStraight(ranks);
+            let straightFlushRanks = isFlush ? findStraight(flushRanks) : null;
+
+            if (straightFlushRanks) {
+                if (straightFlushRanks[0] === 14) return { value: 9, name: "Royal Flush", kickers: straightFlushRanks };
+                return { value: 8, name: "Straight Flush", kickers: straightFlushRanks };
+            }
+            if (countsArr[0] && countsArr[0].count === 4) return { value: 7, name: "Four of a Kind", kickers: [countsArr[0].rank, ...ranks.filter(r => r !== countsArr[0].rank).slice(0, 1)] };
+            if (countsArr[0] && countsArr[0].count === 3 && countsArr[1] && countsArr[1].count >= 2) return { value: 6, name: "Full House", kickers: [countsArr[0].rank, countsArr[1].rank] };
+            if (isFlush) return { value: 5, name: "Flush", kickers: flushRanks.slice(0, 5) };
+            if (straightRanks) return { value: 4, name: "Straight", kickers: straightRanks };
+            if (countsArr[0] && countsArr[0].count === 3) return { value: 3, name: "Three of a Kind", kickers: [countsArr[0].rank, ...ranks.filter(r => r !== countsArr[0].rank).slice(0, 2)] };
+            if (countsArr[0] && countsArr[0].count === 2 && countsArr[1] && countsArr[1].count === 2) return { value: 2, name: "Two Pair", kickers: [countsArr[0].rank, countsArr[1].rank, ...ranks.filter(r => r !== countsArr[0].rank && r !== countsArr[1].rank).slice(0, 1)] };
+            if (countsArr[0] && countsArr[0].count === 2) return { value: 1, name: "One Pair", kickers: [countsArr[0].rank, ...ranks.filter(r => r !== countsArr[0].rank).slice(0, 3)] };
+
+            return { value: 0, name: "High Card", kickers: ranks.slice(0, 5) };
+        }
+
+        function compareHands(h1, h2) {
+            if (h1.value > h2.value) return 1;
+            if (h1.value < h2.value) return -1;
+            for (let i = 0; i < h1.kickers.length; i++) {
+                if (h1.kickers[i] > h2.kickers[i]) return 1;
+                if (h1.kickers[i] < h2.kickers[i]) return -1;
+            }
+            return 0;
+        }
+
+        function initGame() {
+            if (state.gameOver) {
+                state.player.chips = 1000; state.ai.chips = 1000; state.gameOver = false;
+            }
+            document.getElementById('modal').style.display = 'none';
+
+            state.deck = getDeck();
+            state.community = [];
+            state.player.cards = [state.deck.pop(), state.deck.pop()];
+            state.ai.cards = [state.deck.pop(), state.deck.pop()];
+            state.someoneFolded = false;
+
+            let ante = 20;
+            if (state.player.chips < ante) ante = state.player.chips;
+            if (state.ai.chips < ante) ante = state.ai.chips;
+
+            state.player.chips -= ante;
+            state.ai.chips -= ante;
+            state.pot = ante * 2;
+            state.player.currentBet = 0; state.ai.currentBet = 0; state.roundBet = 0;
+
+            state.phase = 'PRE-FLOP';
+            state.turn = 'PLAYER';
+            setLog(`Ante $${ante}. Your Turn.`);
+            updateUI();
+        }
+
+        function nextPhase() {
+            if (state.phase === 'SHOWDOWN') return;
+            state.player.currentBet = 0; state.ai.currentBet = 0; state.roundBet = 0;
+
+            if (state.phase === 'PRE-FLOP') {
+                state.phase = 'FLOP';
+                state.community.push(state.deck.pop(), state.deck.pop(), state.deck.pop());
+                setLog("Flop Dealt.");
+            } else if (state.phase === 'FLOP') {
+                state.phase = 'TURN';
+                state.community.push(state.deck.pop());
+                setLog("Turn Dealt.");
+            } else if (state.phase === 'TURN') {
+                state.phase = 'RIVER';
+                state.community.push(state.deck.pop());
+                setLog("River Dealt.");
+            } else if (state.phase === 'RIVER') {
+                state.phase = 'SHOWDOWN';
+                handleShowdown();
+                return;
+            }
+            state.turn = 'PLAYER';
+            updateUI();
+        }
+
+        function distributePot(winner) {
+            if (winner === 1) {
+                state.player.chips += state.pot;
+                setLog(`You win $${state.pot}!`);
+            } else if (winner === -1) {
+                state.ai.chips += state.pot;
+                setLog(`AI wins $${state.pot}.`);
+            } else {
+                let half = Math.floor(state.pot / 2);
+                state.player.chips += half;
+                state.ai.chips += (state.pot - half);
+                setLog("Tie! Pot Split.");
+            }
+            state.pot = 0;
+            updateUI();
+
+            setTimeout(() => {
+                let msg = winner === 1 ? 'You Won the Pot!' : winner === -1 ? 'AI Won the Pot!' : 'Split Pot!';
+                if (state.player.chips <= 0) { msg = "Game Over! You lost."; state.gameOver = true; }
+                else if (state.ai.chips <= 0) { msg = "Victory! You defeated the AI!"; state.gameOver = true; }
+                document.getElementById('modal-title').innerText = msg;
+                document.querySelector('#modal button').innerText = state.gameOver ? "New Game" : "Next Hand";
+                document.getElementById('modal').style.display = 'flex';
+            }, 2500);
+        }
+
+        function handleShowdown() {
+            let pHand = evaluateHand([...state.player.cards, ...state.community]);
+            let aHand = evaluateHand([...state.ai.cards, ...state.community]);
+
+            let win = compareHands(pHand, aHand);
+            setLog("Showdown!");
+            distributePot(win);
+        }
+
+        function playerAction(action) {
+            if (state.turn !== 'PLAYER' || state.phase === 'SHOWDOWN') return;
+
+            if (action === 'FOLD') {
+                state.someoneFolded = true;
+                state.phase = 'SHOWDOWN';
+                setLog("You Folded.");
+                distributePot(-1);
+                return;
+            }
+
+            let toCall = state.roundBet - state.player.currentBet;
+
+            if (action === 'CHECK') {
+                setLog("You Checked.");
+                state.turn = 'AI';
+                setTimeout(aiAction, 1200);
+            } else if (action === 'BET') {
+                let amount = 50;
+                if (state.player.chips < amount) amount = state.player.chips;
+                state.player.chips -= amount;
+                state.player.currentBet += amount;
+                state.pot += amount;
+                state.roundBet = state.player.currentBet;
+                setLog(`You Bet $${amount}.`);
+                state.turn = 'AI';
+                setTimeout(aiAction, 1200);
+            } else if (action === 'CALL') {
+                let amount = toCall;
+                if (state.player.chips < amount) amount = state.player.chips;
+                state.player.chips -= amount;
+                state.player.currentBet += amount;
+                state.pot += amount;
+                setLog("You Called.");
+                setTimeout(nextPhase, 1200);
+            }
+            updateUI();
+        }
+
+        function aiAction() {
+            if (state.phase === 'SHOWDOWN' || state.turn !== 'AI') return;
+
+            let toCall = state.roundBet - state.ai.currentBet;
+
+            if (toCall > 0) {
+                if (Math.random() > 0.3 || state.ai.chips < 20) {
+                    let amount = toCall;
+                    if (state.ai.chips < amount) amount = state.ai.chips;
+                    state.ai.chips -= amount;
+                    state.ai.currentBet += amount;
+                    state.pot += amount;
+                    setLog("AI Called.");
+                    setTimeout(nextPhase, 1500);
+                } else {
+                    state.someoneFolded = true;
+                    state.phase = 'SHOWDOWN';
+                    setLog("AI Folded.");
+                    distributePot(1);
+                }
+            } else {
+                if (Math.random() > 0.4 || state.ai.chips === 0) {
+                    setLog("AI Checked.");
+                    setTimeout(nextPhase, 1500);
+                } else {
+                    let amount = 50;
+                    if (state.ai.chips < amount) amount = state.ai.chips;
+                    state.ai.chips -= amount;
+                    state.ai.currentBet += amount;
+                    state.pot += amount;
+                    state.roundBet = state.ai.currentBet;
+                    setLog(`AI Bet $${amount}.`);
+                    state.turn = 'PLAYER';
+                }
+            }
+            updateUI();
+        }
+
+        function updateUI() {
+            document.getElementById('player-chips').innerText = `Player: $${state.player.chips}`;
+            document.getElementById('ai-chips').innerText = `AI: $${state.ai.chips}`;
+            document.getElementById('pot').innerText = state.pot;
+
+            let aiHidden = !(state.phase === 'SHOWDOWN' && !state.someoneFolded);
+
+            document.getElementById('player-cards').innerHTML = state.player.cards.map(c => renderCard(c)).join('');
+            document.getElementById('ai-cards').innerHTML = state.ai.cards.map(c => renderCard(c, aiHidden)).join('');
+            document.getElementById('community-cards').innerHTML = state.community.map(c => renderCard(c)).join('');
+
+            if (state.player.cards.length > 0) {
+                let pHand = evaluateHand([...state.player.cards, ...state.community]);
+                document.getElementById('player-rank').innerText = pHand.name;
+            } else {
+                document.getElementById('player-rank').innerText = '';
+            }
+
+            if (!aiHidden && state.ai.cards.length > 0) {
+                let aHand = evaluateHand([...state.ai.cards, ...state.community]);
+                document.getElementById('ai-rank').innerText = aHand.name;
+            } else {
+                document.getElementById('ai-rank').innerText = '';
+            }
+
+            let btnHtml = '';
+            if (state.turn === 'PLAYER' && state.phase !== 'SHOWDOWN') {
+                let toCall = state.roundBet - state.player.currentBet;
+                if (toCall > 0) {
+                    btnHtml += `<button class="action-btn" onclick="playerAction('CALL')">Call ($${toCall})</button>`;
+                    btnHtml += `<button class="action-btn" onclick="playerAction('FOLD')">Fold</button>`;
+                } else {
+                    btnHtml += `<button class="action-btn" onclick="playerAction('CHECK')">Check</button>`;
+                    btnHtml += `<button class="action-btn" onclick="playerAction('BET')">Bet ($50)</button>`;
+                    if (state.pot > 0) btnHtml += `<button class="action-btn" onclick="playerAction('FOLD')">Fold</button>`;
+                }
+            }
+            document.getElementById('controls').innerHTML = btnHtml;
+        }
+    </script>
+</body>
+
+</html>
