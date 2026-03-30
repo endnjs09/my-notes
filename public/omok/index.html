@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gomoku Master AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="header">
+            <h1>Gomoku Master AI</h1>
+            <p class="subtitle">Play Omok with AI!</p>
+        </header>
+
+        <main class="game-area">
+            <div class="main-panel glass-panel">
+                <div class="status-bar">
+                    <div class="turn-indicator">
+                        <div class="stone-preview black" id="current-turn-stone"></div>
+                        <span id="turn-text" class="turn-text">Your Turn (Black)</span>
+                    </div>
+                    <div id="ai-thinking" class="ai-thinking hidden">
+                        <span class="loading-dots">AI is thinking<span>.</span><span>.</span><span>.</span></span>
+                    </div>
+                </div>
+
+                <div class="canvas-container">
+                    <canvas id="game-canvas"></canvas>
+                </div>
+            </div>
+
+            <aside class="side-panel glass-panel">
+                <h2>Game Controls</h2>
+                
+                <div class="setting-group">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="renju-toggle" checked>
+                        <span class="slider"></span>
+                    </label>
+                    <span class="setting-label">Renju Rule (Black 3-3, 4-4, overline forbidden)</span>
+                </div>
+
+                <div class="setting-group">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="ai-first-toggle">
+                        <span class="slider"></span>
+                    </label>
+                    <span class="setting-label">AI Plays First (White)</span>
+                </div>
+
+                <div class="button-group">
+                    <button id="btn-undo" class="btn btn-secondary" title="Take back the last move">
+                        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+                        Undo
+                    </button>
+                    <button id="btn-restart" class="btn btn-primary" title="Start a new game">
+                        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+                        Restart
+                    </button>
+                </div>
+
+                <div class="info-box">
+                    <h3>Rules</h3>
+                    <ul>
+                        <li>Get 5 stones in a row to win.</li>
+                        <li><strong>Renju Rule:</strong> Black cannot play 3-3, 4-4, or more than 5 in a row (overline). White has no restrictions.</li>
+                    </ul>
+                </div>
+            </aside>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="game-over-modal" class="modal hidden">
+        <div class="modal-content glass-panel">
+            <h2 id="winner-text">Black Wins!</h2>
+            <p id="winner-desc">Congratulations, you beat the AI!</p>
+            <button id="btn-modal-restart" class="btn btn-primary">Play Again</button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="engine.js"></script>
+    <script src="renderer.js"></script>
+    <script src="ai.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>

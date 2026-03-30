@@ -21,10 +21,11 @@ export default defineConfig({
         text: 'Game', // 상단에 표시될 이름
         items: [      // 클릭 시 아래로 떨어질 박스 내용
           { text: '원카드 🃏', link: '/onecard.html', target: '_blank' }, 
-          { text: '포커 ♠️', link: '/poker.html', target: '_blank' }
+          { text: '포커 ♠️', link: '/poker.html', target: '_blank' },
+          { text: '오목 ⚪', link: '/omok/index.html', target: '_blank' }
         ]
       },
-    ], // 상단 네비게이션 비우기
+    ], 
 
 
     // 1. 왼쪽 사이드바 설정 (카테고리별 분리)
