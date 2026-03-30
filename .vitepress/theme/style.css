@@ -41,17 +41,32 @@ html:not(.dark) {
   --vp-c-border: #e5e7eb;
 }
 
-/* Let CustomHome handle its own dark/light coloring overrides if needed, but the prompt says 
-"사진과 같이 심플하고 세련된 디자인으로 디자인하십시오."
-So I will enforce dark mode on CustomHome */
 
 .dark .custom-home-container {
   color: white;
 }
 
+.VPNavBar .divider,
+.VPNavBar .divider-line,
+.VPNavBar .divider::before,
+.VPNavBar .divider::after {
+  display: none !important;
+  height: 0 !important;
+  visibility: hidden !important;
+}
+
 /* Navbar specific styling */
 .VPNavBar {
   border-bottom: 1px solid var(--vp-c-divider) !important;
+  background-color: var(--vp-c-bg) !important;
+  /* 가끔 컨테이너 너비 때문에 선이 잘려 보일 수 있으므로 너비 강제 */
+  width: 100% !important;
+}
+
+.VPNavBar-container,
+.VPNavBar .content,
+.VPNavBar .content-body {
+  background-color: transparent !important;
 }
 
 .VPNavBarMenuLink {
@@ -102,7 +117,7 @@ So I will enforce dark mode on CustomHome */
 .DocSearch-Button {
   border-radius: 8px !important;
   justify-content: space-between !important;
-  width: 180px !important;
+  width: 480px !important;
   margin-left: 12px;
 }
 .DocSearch-Button-Keys {

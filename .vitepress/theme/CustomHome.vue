@@ -5,7 +5,7 @@ import { data as posts } from './posts.data.ts'
 <template>
   <div class="custom-home-container">
     <div class="hero-header">
-      <h1 class="title">Studying DL</h1>
+      <h1 class="title">이것저것 끄적이는 공간</h1>
     </div>
 
     <!-- Featured Post Hero Card (가장 최신 글 1개) -->
