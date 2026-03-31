@@ -62,10 +62,9 @@ export default defineConfig({
                 { text: '3-1. 선형 회귀', link: '/Chapter-03/3-1. Linear Regression' },
                 { text: '3-2. 손실함수', link: '/Chapter-03/3-2. Loss function' },
                 { text: '3-3. 경사하강법', link: '/Chapter-03/3-3. Gradient Descent' },
-                { text: '3-4. 신경망', link: '/Chapter-03/3-4. NN' },
-                { text: '3-5. 모델링, 학습', link: '/Chapter-03/3-5. Modeling' },
-                { text: '3-6. 일반화', link: '/Chapter-03/3-6. Generalization' },
-                { text: '3-7. 가중치 감쇠', link: '/Chapter-03/3-7. Weight Decay' },
+                { text: '3-4. 모델링, 학습', link: '/Chapter-03/3-4. Modeling' },
+                { text: '3-5. 일반화', link: '/Chapter-03/3-5. Generalization' },
+                { text: '3-6. 가중치 감쇠', link: '/Chapter-03/3-6. Weight Decay' },
               ]
             },
             {
