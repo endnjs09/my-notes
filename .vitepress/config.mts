@@ -89,7 +89,7 @@ export default defineConfig({
           text: '네트워크 (Network)',
           collapsed: false,
           items: [
-            { text: 'Chapter-01. ', link: '/Data-Structure/intro' },
+            { text: 'Chapter-01. Network Protocol', link: '/src/Network/protocol' },
           ]
         }
       ]
