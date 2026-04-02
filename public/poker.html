@@ -44,9 +44,22 @@
         @media (max-width: 768px) {
             #table {
                 border-radius: 50px;
-                border-width: 10px;
-                height: 95%;
+                border-width: 8px;
+                height: 98%;
+                width: 98%;
             }
+            .card { width: 45px; height: 65px; font-size: 20px; border-radius: 4px; }
+            .pos-left { left: 5px; }
+            .pos-right { right: 5px; }
+            .chip-box { font-size: 12px; padding: 4px 8px; }
+            #controls { max-width: 250px; }
+        }
+        @media (max-height: 750px) {
+            .card { width: 50px; height: 75px; font-size: 22px; }
+            #community { margin-top: -20px; }
+            .pos-0 { bottom: 5px; }
+            .pos-top { top: 5px; }
+            .chip-box { font-size: 13px; padding: 4px 8px; }
         }
 
         .player-container {
@@ -61,8 +74,8 @@
         /* Positions */
         .pos-0 { bottom: 15px; left: 50%; transform: translateX(-50%); }
         .pos-top { top: 15px; left: 50%; transform: translateX(-50%); }
-        .pos-left { left: 15px; top: 50%; transform: translateY(-50%); }
-        .pos-right { right: 15px; top: 50%; transform: translateY(-50%); }
+        .pos-left { left: 30px; top: 50%; transform: translateY(-50%); }
+        .pos-right { right: 30px; top: 50%; transform: translateY(-50%); }
 
         .cards-container {
             display: flex;
@@ -294,7 +307,7 @@
     </div>
 
     <script>
-        const SUITS = ['♠', '♥', '◆', '♣'];
+        const SUITS = ['♠', '♥', '♦', '♣'];
         
         let state = {
             deck: [], community: [], players: [],
@@ -305,6 +318,18 @@
         function setLog(msg) {
             state.log = msg;
             document.getElementById('status-msg').innerText = msg;
+        }
+
+        function updateRaiseLabel(val, maxVal) {
+            let btn = document.getElementById('raise-btn');
+            if (btn) {
+                if (parseInt(val) >= maxVal) {
+                    btn.innerText = "All-In ($" + val + ")";
+                } else {
+                    let prefix = state.roundBet > 0 ? "Raise" : "Bet";
+                    btn.innerText = prefix + " $" + val;
+                }
+            }
         }
 
         function getDeck() {
@@ -648,9 +673,9 @@
             setTimeout(evaluateTurnState, 800);
         }
 
-        function playerAction(action) {
+        function playerAction(action, raiseAmt = 50) {
             if (state.phase === 'SHOWDOWN' || !state.players[state.turnIndex] || !state.players[state.turnIndex].isUser) return;
-            processAction(action, 50);
+            processAction(action, raiseAmt);
         }
 
         function aiLogic() {
@@ -663,6 +688,11 @@
             if (toCall > 0) {
                 if (Math.random() > 0.4 || p.chips < 20) {
                     processAction('CALL');
+                } else if (Math.random() > 0.8 && p.chips > toCall) {
+                    let maxRaise = p.chips - toCall;
+                    let aiRaise = Math.max(50, Math.floor(Math.random() * Math.min(200, maxRaise)));
+                    aiRaise = Math.min(aiRaise, maxRaise);
+                    processAction('BET', aiRaise);
                 } else {
                     processAction('FOLD');
                 }
@@ -670,7 +700,10 @@
                 if (Math.random() > 0.3 || p.chips === 0) {
                     processAction('CHECK');
                 } else {
-                    processAction('BET', 50);
+                    let maxRaise = p.chips;
+                    let aiRaise = Math.max(50, Math.floor(Math.random() * Math.min(200, maxRaise)));
+                    aiRaise = Math.min(aiRaise, maxRaise);
+                    processAction('BET', aiRaise);
                 }
             }
         }
@@ -724,13 +757,26 @@
                             let toCall = state.roundBet - p.currentBet;
                             let html = '';
                             if (toCall > 0) {
-                                html += `<button class="action-btn" onclick="playerAction('CALL')">Call ($${toCall})</button>`;
+                                let label = (p.chips <= toCall) ? 'All-In' : `Call ($${toCall})`;
+                                html += `<button class="action-btn" onclick="playerAction('CALL')">${label}</button>`;
                                 html += `<button class="action-btn" onclick="playerAction('FOLD')">Fold</button>`;
-                                if (p.chips > toCall) html += `<button class="action-btn" onclick="playerAction('BET')">Raise</button>`;
+                                if (p.chips > toCall) {
+                                    let maxRaise = p.chips - toCall;
+                                    let minRaise = Math.min(50, maxRaise);
+                                    let initRaise = minRaise;
+                                    html += `<button class="action-btn" id="raise-btn" onclick="playerAction('BET', parseInt(document.getElementById('raise-slider').value))">Raise $${initRaise}</button>`;
+                                    html += `<input type="range" id="raise-slider" min="${minRaise}" max="${maxRaise}" step="10" value="${initRaise}" oninput="updateRaiseLabel(this.value, ${maxRaise})" style="width:90%; margin-top:4px;">`;
+                                }
                             } else {
                                 html += `<button class="action-btn" onclick="playerAction('CHECK')">Check</button>`;
-                                if (p.chips > 0) html += `<button class="action-btn" onclick="playerAction('BET')">Bet</button>`;
                                 if (state.pot > 0) html += `<button class="action-btn" onclick="playerAction('FOLD')">Fold</button>`;
+                                if (p.chips > 0) {
+                                    let maxRaise = p.chips;
+                                    let minRaise = Math.min(50, maxRaise);
+                                    let initRaise = minRaise;
+                                    html += `<button class="action-btn" id="raise-btn" onclick="playerAction('BET', parseInt(document.getElementById('raise-slider').value))">Bet $${initRaise}</button>`;
+                                    html += `<input type="range" id="raise-slider" min="${minRaise}" max="${maxRaise}" step="10" value="${initRaise}" oninput="updateRaiseLabel(this.value, ${maxRaise})" style="width:90%; margin-top:4px;">`;
+                                }
                             }
                             controlsEl.innerHTML = html;
                         } else {
