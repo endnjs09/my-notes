@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>One Card Game</title>
+    <title>One Card Game - Multiplayer</title>
     <style>
         :root {
             --bg: #121212;
@@ -40,17 +40,11 @@
             font-size: 15px;
             z-index: 10;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-            min-width: 220px;
+            min-width: 200px;
         }
 
-        .status-panel span {
-            font-weight: 800;
-            color: #4facfe;
-        }
-
-        .status-panel span#attack-display {
-            color: #ff4757;
-        }
+        .status-panel span { font-weight: 800; color: #4facfe; }
+        .status-panel span#attack-display { color: #ff4757; }
 
         #message {
             margin-top: 10px;
@@ -72,22 +66,53 @@
             position: relative;
         }
 
+        .ai-opponents-area {
+            display: flex;
+            justify-content: space-evenly;
+            width: 100%;
+            margin-top: 20px;
+            min-height: 140px;
+        }
+
+        .ai-hand-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .ai-name-plate {
+            background: rgba(0,0,0,0.6);
+            padding: 4px 10px;
+            border-radius: 10px;
+            font-size: 14px;
+            color: #ccc;
+            font-weight: bold;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.2);
+            z-index: 5;
+        }
+        
+        .ai-name-plate.active {
+            color: #ffd700;
+            border-color: #ffd700;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
         .ai-hand {
             display: flex;
             justify-content: center;
-            margin-top: 20px;
-            height: 140px;
+            height: 100px;
         }
 
         .ai-hand .card {
-            margin-left: -60px;
-            transform: scale(0.65);
+            margin-left: -70px;
+            transform: scale(0.6);
             pointer-events: none;
+            box-shadow: none;
         }
 
-        .ai-hand .card:first-child {
-            margin-left: 0;
-        }
+        .ai-hand .card:first-child { margin-left: 0; }
 
         .player-hand {
             display: flex;
@@ -96,8 +121,15 @@
             margin-bottom: 20px;
             max-width: 90vw;
             flex-wrap: wrap;
-            gap: 5px;
+            gap: -20px;
             min-height: 150px;
+        }
+        
+        .player-hand .card {
+            margin-right: -40px;
+        }
+        .player-hand .card:last-child {
+            margin-right: 0;
         }
 
         .table-area {
@@ -107,6 +139,7 @@
             justify-content: center;
             flex: 1;
             position: relative;
+            margin-top: -30px;
         }
 
         .deck-pile {
@@ -128,14 +161,8 @@
             gap: 5px;
         }
 
-        .deck-pile:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
-        }
-
-        .deck-pile:active {
-            transform: scale(0.95);
-        }
+        .deck-pile:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(255, 255, 255, 0.4); }
+        .deck-pile:active { transform: scale(0.95); }
 
         .current-card-wrapper {
             position: relative;
@@ -182,19 +209,10 @@
             position: relative;
         }
 
-        .player-hand .card:hover {
-            transform: translateY(-20px) scale(1.1);
-            z-index: 10;
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.6);
-        }
+        .player-hand .card:hover { transform: translateY(-20px) scale(1.1); z-index: 10; box-shadow: 0 15px 30px rgba(0, 0, 0, 0.6); margin-right: 10px; }
 
-        .card.red {
-            color: #ff4757;
-        }
-
-        .card.black {
-            color: #2f3542;
-        }
+        .card.red { color: #ff4757; }
+        .card.black { color: #2f3542; }
 
         .card.disabled {
             filter: brightness(0.6) grayscale(0.5);
@@ -209,137 +227,81 @@
             color: transparent;
         }
 
-        .card-mini-top {
-            font-size: 16px;
-            text-align: left;
-            line-height: 1;
-        }
-
-        .card-center {
-            font-size: 40px;
-            text-align: center;
-        }
-
-        .card-mini-bottom {
-            font-size: 16px;
-            text-align: right;
-            transform: rotate(180deg);
-            line-height: 1;
-        }
-
-        .joker-center {
-            font-size: 20px;
-            text-align: center;
-            line-height: 1.2;
-            padding-top: 20px;
-        }
+        .card-mini-top { font-size: 16px; text-align: left; line-height: 1; }
+        .card-center { font-size: 40px; text-align: center; }
+        .card-mini-bottom { font-size: 16px; text-align: right; transform: rotate(180deg); line-height: 1; }
+        .joker-center { font-size: 20px; text-align: center; line-height: 1.2; padding-top: 20px; }
 
         .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: rgba(0, 0, 0, 0.85);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 100;
-            backdrop-filter: blur(8px);
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0, 0, 0, 0.85); display: flex; align-items: center;
+            justify-content: center; z-index: 100; backdrop-filter: blur(8px);
         }
 
         .modal-content {
-            background: #2f3542;
-            padding: 40px;
-            border-radius: 20px;
-            text-align: center;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+            background: #2f3542; padding: 40px; border-radius: 20px;
+            text-align: center; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .modal-content h2 {
-            margin-top: 0;
-            color: #f1f2f6;
-            font-size: 28px;
-            margin-bottom: 30px;
-        }
+        .modal-content h2 { margin-top: 0; color: #f1f2f6; font-size: 28px; margin-bottom: 30px; }
 
-        .suit-buttons {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-        }
-
+        .suit-buttons { display: flex; gap: 20px; justify-content: center; }
         .suit-btn {
-            width: 80px;
-            height: 80px;
-            font-size: 40px;
-            border: none;
-            border-radius: 16px;
-            cursor: pointer;
-            background: #f1f2f6;
-            transition: 0.2s;
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+            width: 80px; height: 80px; font-size: 40px; border: none;
+            border-radius: 16px; cursor: pointer; background: #f1f2f6;
+            transition: 0.2s; box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
         }
 
-        .suit-btn:hover {
-            transform: scale(1.15) translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
-        }
-
-        .suit-btn.red {
-            color: #ff4757;
-        }
-
-        .suit-btn.black {
-            color: #2f3542;
-        }
+        .suit-btn:hover { transform: scale(1.15) translateY(-5px); box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4); }
+        .suit-btn.red { color: #ff4757; }
+        .suit-btn.black { color: #2f3542; }
 
         .btn-restart {
-            margin-top: 30px;
-            padding: 15px 30px;
-            font-size: 18px;
-            font-weight: bold;
-            color: #fff;
-            background: #ff4757;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: 0.2s;
+            margin-top: 30px; padding: 15px 30px; font-size: 18px; font-weight: bold;
+            color: #fff; background: #ff4757; border: none; border-radius: 8px;
+            cursor: pointer; transition: 0.2s;
         }
 
-        .btn-restart:hover {
-            background: #ff6b81;
-            transform: scale(1.05);
+        .btn-restart:hover { background: #ff6b81; transform: scale(1.05); }
+
+        .setup-btns { display: flex; gap: 20px; justify-content: center; }
+        .setup-btns button {
+            padding: 15px 30px; font-size: 24px; font-weight: bold;
+            color: #fff; background: #4facfe; border: none; border-radius: 8px;
+            cursor: pointer; transition: 0.2s;
         }
+        .setup-btns button:hover { background: #3b9eeb; transform: scale(1.05); }
 
         @keyframes deal-anim {
-            0% {
-                opacity: 0;
-                transform: translateY(50px) scale(0.8);
-            }
-
-            100% {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
+            0% { opacity: 0; transform: translateY(50px) scale(0.8); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
         }
-
-        .anim-enter {
-            animation: deal-anim 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
-        }
+        .anim-enter { animation: deal-anim 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) both; }
     </style>
 </head>
 
 <body>
-    <div class="game-container">
+    
+    <div id="setup-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2>Select Players</h2>
+            <div class="setup-btns">
+                <button onclick="startGame(2)">2 Players</button>
+                <button onclick="startGame(3)">3 Players</button>
+                <button onclick="startGame(4)">4 Players</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="game-container" style="display:none;" id="game-view">
         <div class="status-panel">
             <div>Turn: <span id="turn-display">Player</span></div>
             <div>Direction: <span id="direction-display">Clockwise</span></div>
             <div>Attack Stack: <span id="attack-display">0</span></div>
             <div id="message">Game Started! Your Turn.</div>
         </div>
-        <div class="ai-hand" id="ai-hand"></div>
+        <div class="ai-opponents-area" id="ai-opponents"></div>
         <div class="table-area">
             <div class="deck-pile" onclick="onDeckClick()" title="Draw Card">
                 <span style="font-size:30px;">🃏</span>
@@ -352,6 +314,7 @@
         </div>
         <div class="player-hand" id="player-hand"></div>
     </div>
+
     <div id="suit-picker" class="modal-overlay" style="display:none;">
         <div class="modal-content">
             <h2>Select a new suit</h2>
@@ -363,20 +326,41 @@
             </div>
         </div>
     </div>
+
     <div id="game-over" class="modal-overlay" style="display:none;">
         <div class="modal-content">
             <h2 id="winner-text" style="font-size: 36px; padding: 0 20px;">🎉 WIN!</h2>
             <button class="btn-restart" onclick="location.reload()">Play Again</button>
         </div>
     </div>
+
     <script>
         const SUITS = ['♠', '♥', '♦', '♣'];
         const RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
 
-        let deck = [], playerHand = [], aiHand = [], table = [];
+        let deck = [], table = [];
+        let players = [];
+        let turnIndex = 0;
+        let direction = 1; // 1 for Clockwise, -1 for Counter
+        
         let currentSuit = '', attackAmt = 0, activeAttackTier = 0;
-        let turn = 'player'; // 'player', 'ai', 'waiting_suit'
-        let direction = 'Clockwise';
+        let gameOver = false;
+
+        function startGame(count) {
+            document.getElementById('setup-modal').style.display = 'none';
+            document.getElementById('game-view').style.display = 'flex';
+            
+            for (let i = 0; i < count; i++) {
+                players.push({
+                    id: i,
+                    name: i === 0 ? "You" : "AI " + i,
+                    isUser: i === 0,
+                    cards: []
+                });
+            }
+            init();
+        }
+
         function init() {
             SUITS.forEach(suit => {
                 RANKS.forEach(rank => {
@@ -386,10 +370,11 @@
             deck.push({ suit: '', rank: 'Black Joker', short: 'B.JOKER', color: 'black', type: 'joker' });
             deck.push({ suit: '', rank: 'Color Joker', short: 'C.JOKER', color: 'red', type: 'joker' });
             deck.sort(() => Math.random() - 0.5);
+            
             for (let i = 0; i < 7; i++) {
-                playerHand.push(deck.pop());
-                aiHand.push(deck.pop());
+                players.forEach(p => p.cards.push(deck.pop()));
             }
+            
             for (let i = 0; i < deck.length; i++) {
                 if (!['2', 'A', '7', 'J', 'Q', 'K', 'Black Joker', 'Color Joker'].includes(deck[i].rank)) {
                     let card = deck.splice(i, 1)[0];
@@ -404,8 +389,27 @@
                 table.push(card);
             }
             currentSuit = table[table.length - 1].suit;
+            
+            buildAIZones();
             render();
+            if(!players[turnIndex].isUser) {
+                setTimeout(aiLogic, 1200);
+            }
         }
+
+        function buildAIZones() {
+            let html = '';
+            for (let i = 1; i < players.length; i++) {
+                html += `
+                    <div class="ai-hand-container">
+                        <div class="ai-name-plate" id="nameplate-${i}">${players[i].name} (${players[i].cards.length})</div>
+                        <div class="ai-hand" id="ai-hand-${i}"></div>
+                    </div>
+                `;
+            }
+            document.getElementById('ai-opponents').innerHTML = html;
+        }
+
         function getRotation() { return Math.floor(Math.random() * 40 - 20); }
         function getTier(card) {
             if (card.rank === '2') return 1;
@@ -422,6 +426,7 @@
             return 0;
         }
         function isAttack(card) { return getTier(card) > 0; }
+        
         function isValidToPlay(card) {
             let topCard = table[table.length - 1];
             if (attackAmt > 0) {
@@ -434,17 +439,27 @@
                 return false;
             }
         }
+
         function checkEndGame() {
-            if (playerHand.length === 0) { showWin("🎉 WIN! (You emptied your hand)"); return true; }
-            if (aiHand.length === 0) { showWin("💀 LOSE! (AI emptied its hand)"); return true; }
-            if (playerHand.length >= 20) { showWin("💀 BURST! (You have 20+ cards)"); return true; }
-            if (aiHand.length >= 20) { showWin("🎉 WIN! (AI Burst with 20+ cards)"); return true; }
+            for (let p of players) {
+                if (p.cards.length === 0) {
+                    showWin(p.isUser ? "🎉 WIN! (You emptied your hand)" : `💀 LOSE! (${p.name} won!)`);
+                    return true;
+                }
+                if (p.cards.length >= 20) {
+                    showWin(p.isUser ? "💀 BURST! (You have 20+ cards)" : `🎉 WIN! (${p.name} Burst!)`);
+                    return true;
+                }
+            }
             return false;
         }
+
         function showWin(msg) {
+            gameOver = true;
             document.getElementById('winner-text').innerText = msg;
             document.getElementById('game-over').style.display = 'flex';
         }
+
         function setMessage(msg) {
             let el = document.getElementById('message');
             el.innerText = msg;
@@ -452,43 +467,60 @@
             void el.offsetWidth;
             el.style.animation = 'deal-anim 0.3s ease-out';
         }
+
         function renderCardInner(card) {
-            if (card.type === 'joker') {
-                return `<div class="joker-center">${card.short.replace('.', '.<br/>')}</div>`;
-            }
+            if (card.type === 'joker') return `<div class="joker-center">${card.short.replace('.', '.<br/>')}</div>`;
             return `
             <div class="card-mini-top">${card.suit}${card.rank}</div>
             <div class="card-center">${card.suit}</div>
             <div class="card-mini-bottom">${card.suit}${card.rank}</div>
         `;
         }
-        function renderList(containerId, list, isPlayer) {
+
+        function renderList(containerId, list, isUserActivePlayer, isPlayerHand) {
             const el = document.getElementById(containerId);
+            if(!el) return;
             el.innerHTML = '';
             list.forEach((card, i) => {
                 let div = document.createElement('div');
-                div.className = isPlayer ? `card anim-enter ${card.color}` : 'card back anim-enter';
+                div.className = isPlayerHand ? `card anim-enter ${card.color}` : 'card back anim-enter';
                 div.style.animationDelay = `${i * 0.05}s`;
-                if (isPlayer) {
-                    if (turn !== 'player' || !isValidToPlay(card)) div.classList.add('disabled');
+                if (isPlayerHand) {
+                    if (!isUserActivePlayer || !isValidToPlay(card)) div.classList.add('disabled');
                     div.innerHTML = renderCardInner(card);
                     div.onclick = () => onCardClick(i);
                 }
                 el.appendChild(div);
             });
         }
+
         function render() {
-            document.getElementById('turn-display').innerText = turn === 'player' ? 'Your Turn' : 'AI Turn';
-            document.getElementById('turn-display').style.color = turn === 'player' ? '#4facfe' : '#ff9f43';
-            document.getElementById('direction-display').innerText = direction;
+            let activePlayer = players[turnIndex];
+            
+            let turnEl = document.getElementById('turn-display');
+            turnEl.innerText = activePlayer.name + "'s Turn";
+            turnEl.style.color = activePlayer.isUser ? '#4facfe' : '#ff9f43';
+            
+            document.getElementById('direction-display').innerText = direction === 1 ? 'Clockwise' : 'Counter-Clockwise';
             document.getElementById('attack-display').innerText = attackAmt > 0 ? '+' + attackAmt : '0';
             document.getElementById('deck-display').innerText = deck.length;
 
             let indicator = document.getElementById('suit-indicator');
             indicator.innerText = `Current Suit: ${currentSuit || 'Any'}`;
             indicator.style.background = (currentSuit === '♥' || currentSuit === '♦') ? '#ff4757' : '#2f3542';
-            renderList('player-hand', playerHand, true);
-            renderList('ai-hand', aiHand, false);
+            
+            renderList('player-hand', players[0].cards, turnIndex === 0, true);
+            
+            for (let i = 1; i < players.length; i++) {
+                let nameplate = document.getElementById(`nameplate-${i}`);
+                if(nameplate) {
+                    nameplate.innerText = `${players[i].name} (${players[i].cards.length})`;
+                    if(turnIndex === i) nameplate.classList.add('active');
+                    else nameplate.classList.remove('active');
+                }
+                renderList(`ai-hand-${i}`, players[i].cards, false, false);
+            }
+
             if (table.length > 0) {
                 let topCard = table[table.length - 1];
                 let tCardEl = document.getElementById('current-card');
@@ -497,6 +529,7 @@
                 tCardEl.style.transform = `rotate(${topCard.rotation}deg)`;
             }
         }
+
         function recycleTable() {
             if (table.length <= 1) return;
             let top = table.pop();
@@ -504,6 +537,7 @@
             table = [top];
             deck.sort(() => Math.random() - 0.5);
         }
+
         function drawCards(hand, amount) {
             for (let i = 0; i < amount; i++) {
                 if (deck.length === 0) recycleTable();
@@ -511,28 +545,33 @@
                 hand.push(deck.pop());
             }
         }
-        function onDeckClick() {
-            if (turn !== 'player') return;
 
+        function onDeckClick() {
+            if (gameOver || turnIndex !== 0) return;
+
+            let p = players[0];
             if (attackAmt > 0) {
-                drawCards(playerHand, attackAmt);
+                drawCards(p.cards, attackAmt);
                 setMessage(`You drew ${attackAmt} cards from Attack.`);
                 attackAmt = 0; activeAttackTier = 0;
             } else {
-                drawCards(playerHand, 1);
+                drawCards(p.cards, 1);
                 setMessage("You drew a card.");
             }
 
             render();
             if (checkEndGame()) return;
-            passTurnToAI();
+            passTurn();
         }
+
         function onCardClick(index) {
-            if (turn !== 'player') return;
-            let card = playerHand[index];
+            if (gameOver || turnIndex !== 0) return;
+            
+            let p = players[0];
+            let card = p.cards[index];
             if (!isValidToPlay(card)) return;
 
-            playerHand.splice(index, 1);
+            p.cards.splice(index, 1);
             card.rotation = getRotation();
             table.push(card);
             if (card.suit) currentSuit = card.suit;
@@ -546,48 +585,57 @@
             if (checkEndGame()) return;
 
             if (card.rank === '7') {
-                turn = 'waiting_suit';
                 document.getElementById('suit-picker').style.display = 'flex';
-                return;
+                return; // wait for suit pick
             }
 
             if (card.rank === 'J' || card.rank === 'K') {
                 setMessage("Your turn again!");
-                return;
+                return; // keep turnIndex identical
             }
 
             if (card.rank === 'Q') {
-                direction = direction === 'Clockwise' ? 'Counter-clockwise' : 'Clockwise';
+                direction *= -1;
                 setMessage("Direction Reversed!");
-                passTurnToAI();
+                passTurn();
                 return;
             }
 
-            passTurnToAI();
+            passTurn();
         }
+
         function pickSuit(suit) {
             currentSuit = suit;
             document.getElementById('suit-picker').style.display = 'none';
             setMessage(`You changed suit to ${suit}`);
             render();
-            passTurnToAI();
+            passTurn();
         }
-        function passTurnToAI() {
-            turn = 'ai';
+
+        function passTurn() {
+            if (gameOver) return;
+            turnIndex = (turnIndex + direction + players.length) % players.length;
             render();
-            setTimeout(aiLogic, 1200);
+
+            if (!players[turnIndex].isUser) {
+                setTimeout(aiLogic, 1200 + Math.random() * 500);
+            }
         }
+
         function aiLogic() {
+            if (gameOver || players[turnIndex].isUser) return;
+            
+            let p = players[turnIndex];
             let validIndices = [];
-            for (let i = 0; i < aiHand.length; i++) {
-                if (isValidToPlay(aiHand[i])) validIndices.push(i);
+            for (let i = 0; i < p.cards.length; i++) {
+                if (isValidToPlay(p.cards[i])) validIndices.push(i);
             }
 
             if (validIndices.length > 0) {
                 let index = validIndices[Math.floor(Math.random() * validIndices.length)];
-                let card = aiHand[index];
+                let card = p.cards[index];
 
-                aiHand.splice(index, 1);
+                p.cards.splice(index, 1);
                 card.rotation = getRotation();
                 table.push(card);
                 if (card.suit) currentSuit = card.suit;
@@ -602,39 +650,38 @@
 
                 if (card.rank === '7') {
                     let counts = { '♠': 0, '♥': 0, '♦': 0, '♣': 0 };
-                    aiHand.forEach(c => { if (c.suit) counts[c.suit]++; });
+                    p.cards.forEach(c => { if (c.suit) counts[c.suit]++; });
                     let best = '♠', max = -1;
                     for (let s in counts) {
                         if (counts[s] > max) { max = counts[s]; best = s; }
                     }
                     currentSuit = best;
-                    setMessage(`AI changed suit to ${best}`);
-                    turn = 'player'; render();
+                    setMessage(`${p.name} changed suit to ${best}`);
+                    setTimeout(passTurn, 800);
                 } else if (card.rank === 'J' || card.rank === 'K') {
-                    setMessage(`AI played ${card.rank}! AI plays again!`);
+                    setMessage(`${p.name} played ${card.rank}! ${p.name} plays again!`);
                     setTimeout(aiLogic, 1200);
                 } else if (card.rank === 'Q') {
-                    direction = direction === 'Clockwise' ? 'Counter-clockwise' : 'Clockwise';
-                    setMessage("Direction Reversed! Your Turn.");
-                    turn = 'player'; render();
+                    direction *= -1;
+                    setMessage("Direction Reversed!");
+                    setTimeout(passTurn, 800);
                 } else {
-                    setMessage("Your Turn");
-                    turn = 'player'; render();
+                    setMessage(`${p.name} played.`);
+                    setTimeout(passTurn, 800);
                 }
             } else {
                 if (attackAmt > 0) {
-                    drawCards(aiHand, attackAmt);
-                    setMessage(`AI drew ${attackAmt} cards from Attack.`);
+                    drawCards(p.cards, attackAmt);
+                    setMessage(`${p.name} drew ${attackAmt} cards from Attack.`);
                     attackAmt = 0; activeAttackTier = 0;
                 } else {
-                    drawCards(aiHand, 1);
-                    setMessage("AI drew a card.");
+                    drawCards(p.cards, 1);
+                    setMessage(`${p.name} drew a card.`);
                 }
                 if (checkEndGame()) return;
-                turn = 'player'; render();
+                setTimeout(passTurn, 800);
             }
         }
-        init();
     </script>
 </body>
 
