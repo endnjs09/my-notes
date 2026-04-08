@@ -90,6 +90,7 @@ export default defineConfig({
           collapsed: false,
           items: [
             { text: 'Chapter-01. Network Protocol', link: '/src/Network/protocol' },
+            { text: 'Network Protocol - 전화기 예제', link: '/src/Network/protocol2' },
           ]
         }
       ]
