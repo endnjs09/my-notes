@@ -186,7 +186,7 @@ int main(int argc, char *argv[]){
         errquit("bind fail");
     }
 
-    // listen: 수동 대기 모드 (손님 전화가 올 때까지 벨소리를 켜두는 작업)
+    // listen: 문지기 우체통 역할 (손님 전화가 올 때까지 벨소리를 켜두는 작업)
     // 5는 백로그 큐 크기로, 연결 대기자 명단의 최대 길이를 의미함
     listen(listen_sock, 5);
 
@@ -204,8 +204,10 @@ int main(int argc, char *argv[]){
         puts("클라이언트가 연결됨...");
 
         // 통신: TCP는 스트림 방식이라 read/write 함수를 사용함
-        // 클라이언트가 보낸 데이터를 읽어서(read) 다시 그대로 돌려줌(write)
+        // 클라이언트가 보낸 데이터를 읽음(read) 
         nbyte = read(accp_sock, buf, MAXLINE);
+
+        // TCP는 1대1 전용 통로(파이프)가 연결된 상태라서 sendto에서 처럼 주소를 따로 적을 필요가 없음. write로 바로 보내버림.
         write(accp_sock, buf, nbyte);
 
         // 통화 종료: 이번 손님과의 대화를 마침

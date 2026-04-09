@@ -48,7 +48,7 @@ ssize_t recvfrom(int sockfd, void *buf, size_t len, int flags, struct sockaddr *
 - **len**: 버퍼의 최대 크기
 - **flags**: 옵션 (보통은 0)
 - ***src_addr**: 보낸 사람의 주소를 기록할 빈 구조체 주소
-- ***addrlen**: 주소 구조체 크기가 저장된 변수의 주소값 (포인터)
+- ***addrlen**: 주소 구조체 크기가 저장된 변수의 주소값. 운영체제가 나한테 뭘 써줘야 하면 포인터를 써야함 (accept, recvfrom 등)
 
 성공시 받은 바이트 수를, 실패시 -1 반환
 ```C
@@ -60,7 +60,7 @@ nbyte = recvfrom(s, buf, MAXLINE, 0, (struct sockaddr*)&cliaddr, &addrlen)
 // MAXLINE: 버퍼(바구니)의 최대 크기
 // 0: 옵션
 // (struct sockaddr*)&cliaddr: 누구한테 보낼지 적힌 주소
-// &addrlen: 주소 크기를 알려주는 변수의 주소값 (길이를 서버가 직접 써넣어야 하므로 주소를 줌)
+// &addrlen: 주소 크기를 알려주는 변수의 주소값. 예를 들어 addrlen 크기를 16바이트로 잡았는데 운영체제가 recvfrom 하려고 보니까 12바이트 밖에 안됨. 그러면 운영체제는 12바이트로 바꿔서 다시 써줌. 
 ```
 <br>
 
@@ -75,7 +75,7 @@ ssize_t sendto(int sockfd, const void *buf, size_t len, int flags,
 - **len**: 보낼 데이터의 실제 크기
 - **flags**: 옵션
 - ***dest_addr**: 받을 사람의 주소가 적혀있는 구조체 주소
-- **addrlen**: 주소 구조체의 크기 (값 전달)
+- **addrlen**: 주소 구조체의 크기. 내가 운영체제한테 알려줄 때.
 
 성공시 보낸 바이트 수를, 실패시 -1 반환
 ```C
@@ -86,8 +86,11 @@ sendto(s, buf, nbyte, 0, (struct sockaddr*)&cliaddr, addrlen);
 // nbyte: 보낼 데이터의 실제 크기
 // 0: 옵션
 // (struct sockaddr*)&cliaddr: 누구한테 보낼지 적힌 주소
-// addrlen: 주소 구조치의 크기 (값만 알려주면 되므로 일반 변수 사용)
+// addrlen: 주소 구조치의 크기. 위에서 운영체제가 알려준 12바이트를 나는 그냥 운영체제한테 알려주기만 하면 되기 때문에 일반 변수임.
 ```
+
+**참고**: addrlen을 넘겨주는 이유?<br>
+→ 운영체제는 우리가 넘겨주는 주소가 IPv4(16바이트)인지 IPv6(28바이트)인지 모름. 그렇기 때문에 주소 크기를 알려주는 변수나 포인터가 필요한 것.
 <br>
 
 ### 바이트 오더 변환
@@ -175,8 +178,9 @@ if (nbyte == 0)
     printf("Connection closed\n");
 ```
 
-### inet_aton()
-문자열을 바이너리 주소로 변환하는 함수
+### inet_aton() & inet_ntoa (IPv4 전용)
+inet_aton(): 문자열("192.168.0.1")을 바이너리 주소로 변환하는 함수
+inet_ntoa(): 바이너리 주소를 문자열("192.168.0.1")로 변환하는 함수
 ```C
 int inet_aton(const char *cp, struct in_addr *inp);
 ```
@@ -190,8 +194,9 @@ if (inet_aton("127.0.0.1(argv[1])", &servaddr.sin_addr) == 0)
 ```
 <br>
 
-### inet_ntop()
-바이너리 주소를 문자열로 변환하는 함수
+### inet_ntop() & inet_pton (IPv4, IPv6 공용)
+inet_ntop() 함수: 바이너리 주소를 문자열("192.168.0.1")로 변환하는 함수
+inet_pton() 함수: 문자열("192.168.0.1")을 바이너리 주소로 변환하는 함수
 ```C
 const char *inet_ntop(int af, const void *src, char *dst, socklen_t size);
 ```
