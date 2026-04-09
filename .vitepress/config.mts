@@ -93,24 +93,24 @@ export default defineConfig({
               text: 'Chapter-01. Network Protocol',
               collapsed: false,
               items: [
-                { text: '1-1. 기본 개념', link: '/src/1_Network/protocol' },
-                { text: '1-2. 기초 소켓 프로그래밍', link: '/src/DL/1_Network/socket' },
-                { text: '1-3. 예제', link: '/src/DL/1_Network/calc' },
+                { text: '1-1. 기본 개념', link: '/src/Network/1_Network/protocol' },
+                { text: '1-2. 기초 소켓 프로그래밍', link: '/src/Network/1_Network/socket' },
+                { text: '1-3. 예제', link: '/src/Network/1_Network/calc' },
               ]
             },
             {
               text: 'Chapter-02. Process',
               collapsed: false,
               items: [
-                { text: '2-1. 기본 개념', link: '/src/1_Network/protocol' },
-                { text: '2-2. 예제', link: '/src/DL/1_Network/talkserv' },
+                { text: '2-1. 기본 개념', link: '/src/Network/1_Network/protocol' },
+                { text: '2-2. 예제', link: '/src/DL/Network/1_Network/talkserv' },
               ]
             },
             {
               text: '부록',
               collapsed: false,
               items: [
-                { text: '함수 원형들', link: '/src/DL/1_Network/function' },
+                { text: '함수 원형들', link: '/src/DL/Network/1_Network/function' },
               ]
             },
           ]
