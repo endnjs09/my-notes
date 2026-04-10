@@ -4,8 +4,7 @@
 
 |서버|클라이언트|
 |---|--------|
-|listen(), accept(), fork(), <br>send() → 부모 / recv() → 자식|connect(), fork(), send(), <br>send() → 부모 / recv() → 자식
-<br>
+|listen(), accept(), fork(), <br>send() → 부모 / recv() → 자식|connect(), fork(), <br>send() → 부모 / recv() → 자식
 
 ### 1. 서버
 ```C

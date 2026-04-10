@@ -102,7 +102,7 @@ export default defineConfig({
               text: 'Chapter-02. Process',
               collapsed: false,
               items: [
-                { text: '2-1. 기본 개념', link: '/src/Network/2_process/protocol' },
+                { text: '2-1. 기본 개념', link: '/src/Network/2_process/process' },
                 { text: '2-2. 예제', link: '/src/Network/2_process/talkserv' },
               ]
             },
