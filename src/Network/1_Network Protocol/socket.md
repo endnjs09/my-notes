@@ -250,8 +250,7 @@ int main(int argc, char *argv[]) {
     inet_aton(argv[1], &servaddr.sin_addr); // 문자열 IP를 이진 주소로 변환
     servaddr.sin_port = htons(atoi(argv[2]));
 
-    // connect: 서버에 전화 걸기 (연결 요청)
-    // 서버가 accept()를 호출할 때까지 기다렸다가 연결이 성공하면 통로가 생김
+    // connect: 서버에 전화 걸기 (연결 요청), 서버가 accept()를 호출할 때까지 기다렸다가 연결이 성공하면 통로가 생김
     if (connect(s, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0)
         errquit("connect fail");
 
@@ -285,6 +284,11 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 ```
+**참고**: getsockname() 의 역할: <br>
+connect 전에는 클라이언트 소켓은 IP, Port가 없음. connect를 호출하면 운영체제는 비어있는 포트 중 하나를 골라서 소켓에 자동으로 할당함. 
+connect가 성공하면 클라이언트 소켓에도 IP랑 포트번호가 생기지만, 몇 번인지 알 수가 없음. <br>
+그래서 getsockname()으로 운영체제가 준 IP랑 포트번호가 몇 번인지 확인하는 것. 정확히는 cliaddr 구조체 변수에 IP(바이너리 형태)와 포트번호를 적어줌.
+
 
 <br><br><br>
 

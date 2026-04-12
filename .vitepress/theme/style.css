@@ -102,12 +102,13 @@ html:not(.dark) .custom-home-container {
   color: var(--vp-c-text-1); /* 변수를 따르도록 설정 */
 }
 
+
 /* The custom home page */
 .custom-home-page .VPDoc {
   padding-top: 0 !important;
   padding-bottom: 0 !important;
   width: 100% !important;
-  max-width: 1000px !important; 
+  max-width: 1200px !important; 
   margin: 0 auto;
 }
 .custom-home-page .vp-doc {

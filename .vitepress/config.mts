@@ -94,8 +94,9 @@ export default defineConfig({
               collapsed: false,
               items: [
                 { text: '1-1. 기본 개념', link: '/src/Network/1_Network Protocol/protocol' },
-                { text: '1-2. 기초 소켓 프로그래밍', link: '/src/Network/1_Network Protocol/socket' },
+                { text: '1-2. 소켓 프로그래밍 기초', link: '/src/Network/1_Network Protocol/socket' },
                 { text: '1-3. 예제', link: '/src/Network/1_Network Protocol/calc' },
+                { text: '함수 원형들', link: '/src/Network/1_Network Protocol/function' },
               ]
             },
             {
@@ -107,10 +108,12 @@ export default defineConfig({
               ]
             },
             {
-              text: '부록',
+              text: 'Chapter-03. Socket Programming',
               collapsed: false,
               items: [
-                { text: '함수 원형들', link: '/src/Network/1_Network Protocol/function' },
+                { text: '3-1. 다중처리 기술', link: '/src/Network/3_Socket Programming/multi' },
+                { text: '3-2. 비동기형 채팅 프로그램', link: '/src/Network/3_Socket Programming/chatserv' },
+                { text: '3-3. 폴링형 채팅 프로그램', link: '/src/Network/3_Socket Programming/polling' },
               ]
             },
           ]
