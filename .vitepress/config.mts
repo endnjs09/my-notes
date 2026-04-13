@@ -78,11 +78,10 @@ export default defineConfig({
           ]
         },
         {
-          text: '자료구조 (Data Structure)',
+          text: '시스템 프로그래밍',
           collapsed: false,
           items: [
-            { text: 'Chapter-01. ', link: '/Data-Structure/intro' },
-            { text: 'Chapter-02. ', link: '/Data-Structure/stack-queue' },
+            { text: 'Chapter-01. 파일', link: '/src/Sysprog/1_Directory/command' },
           ]
         },
         {
