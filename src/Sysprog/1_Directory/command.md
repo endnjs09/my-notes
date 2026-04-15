@@ -287,7 +287,24 @@ int main(int argc, char *argv[]) {
 |------|------|
 |`기본`| `mv a.txt b.txt`, `mv dir1 dir2`|
 | `-f` | 대상 파일 존재해도 강제 덮어씀 |
+```C
+#include "sysprog.h"
 
+int main(int argc, char *argv[]) {
+
+    if (argc < 3) {
+        printf("Usage: MV souce data\n");
+        exit(1);
+    }
+
+    if (rename(argv[1], argv[2]) == -1) {
+        perror("rename");
+        exit(1);
+    }
+
+    return 0;
+}
+```
 ---
 <br><br>
 
@@ -299,6 +316,70 @@ int main(int argc, char *argv[]) {
 |------|------|
 |`기본`| `rm a.txt` (파일삭제)|
 | `-r` | 디렉토리와 하위 내용 재귀 삭제 `rm -r dir1`|
+```C
+#include "sysprog.h"
+#define PATHSIZE 1024
+#define BUFSIZE 512
+
+void rm(char* file) {
+    struct stat statbuf;
+    struct dirent *dent;
+    DIR *dp;
+
+    if ((dp = opendir(file)) == NULL) {
+        perror("opendir");
+        exit(1);
+    }
+
+    // a/test.txt, a/b/test2.c 가 있다고 가정
+    while(dent = readdir(dp)) { 
+        if (dent->d_name[0] == '.') continue;
+
+        char fullpath[PATHSIZE + 256];
+
+        // a/b
+        snprintf(fullpath, sizeof(fullpath), "%s/%s", file, dent->d_name);
+
+        if (stat(fullpath, &statbuf) == -1) continue;
+
+        // 디렉터리 (a/b)
+        if (S_ISDIR(statbuf.st_mode)) { 
+            rm(fullpath);
+            rmdir(fullpath);
+        }
+        // 파일 (test.txt, test2.c)
+        if (S_ISREG(statbuf.st_mode)) { 
+            unlink(fullpath);
+        }
+    }
+
+    closedir(dp);
+}
+
+int main(int argc, char *argv[]) {
+
+    if (argc < 2) {
+        printf("Usage: RM [-r] filename\n");
+        exit(1);
+    }
+
+    int rm_r = 0;
+    if (strcmp(argv[1], "-r") == 0 && argc < 3) {
+        printf("Usage: RM [-r] filename\n");
+        exit(1);
+    }
+    if (strcmp(argv[1], "-r") == 0) rm_r = 1;
+
+    if (rm_r == 1) {
+        rm(argv[2]);
+        rmdir(argv[2]);
+    }
+    else {
+        unlink(argv[1]);
+    }
+    return 0;
+}
+```
 ---
 <br><br>
 
@@ -339,11 +420,14 @@ int main(int argc, char *argv[]) {
         while (token != NULL) {
             strcat(curpath, token);    
 
-            if (stat(curpath, &statbuf) != 0) {  // 파일 정보 가져옴 0이면 이미 존재한다는 뜻
+            // 파일 정보 가져옴 0이면 이미 존재한다는 뜻
+            if (stat(curpath, &statbuf) != 0) {  
                 mkdir(curpath, 0755);
             }
             strcat(curpath, "/");
-            token = strtok(NULL, "/");      // 이전에 잘랐던 위치에서 이어서 자름 (b가 됨)
+
+            // 이전에 잘랐던 위치에서 이어서 자름 (b가 됨)
+            token = strtok(NULL, "/");      
         }
     }
     else {
