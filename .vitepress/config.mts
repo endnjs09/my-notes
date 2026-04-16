@@ -115,6 +115,13 @@ export default defineConfig({
                 { text: '3-3. 폴링형 채팅 프로그램', link: '/src/Network/3_Socket Programming/polling' },
               ]
             },
+            {
+              text: 'Chapter-04. Socket opt',
+              collapsed: false,
+              items: [
+                { text: '4-1. 멀티 캐스트', link: '/src/Network/4_Socket opt/multicast' },
+              ]
+            },
           ]
         }
       ]
