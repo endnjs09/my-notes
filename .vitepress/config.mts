@@ -76,53 +76,6 @@ export default defineConfig({
             }
             
           ]
-        },
-        {
-          text: '시스템 프로그래밍',
-          collapsed: false,
-          items: [
-            { text: 'Chapter-01. 파일', link: '/src/Sysprog/1_Directory/command' },
-          ]
-        },
-        {
-          text: '네트워크 (Network)',
-          collapsed: false,
-          items: [
-            {
-              text: 'Chapter-01. Network Protocol',
-              collapsed: false,
-              items: [
-                { text: '1-1. 기본 개념', link: '/src/Network/1_Network Protocol/protocol' },
-                { text: '1-2. 소켓 프로그래밍 기초', link: '/src/Network/1_Network Protocol/socket' },
-                { text: '1-3. 예제', link: '/src/Network/1_Network Protocol/calc' },
-                { text: '함수 원형들', link: '/src/Network/1_Network Protocol/function' },
-              ]
-            },
-            {
-              text: 'Chapter-02. Process',
-              collapsed: false,
-              items: [
-                { text: '2-1. 기본 개념', link: '/src/Network/2_process/process' },
-                { text: '2-2. 예제', link: '/src/Network/2_process/talkserv' },
-              ]
-            },
-            {
-              text: 'Chapter-03. Socket Programming',
-              collapsed: false,
-              items: [
-                { text: '3-1. 다중처리 기술', link: '/src/Network/3_Socket Programming/multi' },
-                { text: '3-2. 비동기형 채팅 프로그램', link: '/src/Network/3_Socket Programming/chatserv' },
-                { text: '3-3. 폴링형 채팅 프로그램', link: '/src/Network/3_Socket Programming/polling' },
-              ]
-            },
-            {
-              text: 'Chapter-04. Socket opt',
-              collapsed: false,
-              items: [
-                { text: '4-1. 멀티 캐스트', link: '/src/Network/4_Socket opt/multicast' },
-              ]
-            },
-          ]
         }
       ]
     },
